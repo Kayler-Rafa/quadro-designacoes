@@ -19,8 +19,12 @@ const JUNE1_PRESET = {
 };
 
 async function initPreset() {
-  if (!await db.getAssignment('2026-06-01')) {
-    await db.upsertAssignment({ ...JUNE1_PRESET, limpeza: null });
+  try {
+    if (!await db.getAssignment('2026-06-01')) {
+      await db.upsertAssignment({ ...JUNE1_PRESET, limpeza: null });
+    }
+  } catch (e) {
+    console.error('[initPreset] Falhou (banco não conectado?):', e.message);
   }
 }
 initPreset();
