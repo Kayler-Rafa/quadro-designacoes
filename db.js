@@ -8,7 +8,13 @@ const DATA_KEY = 'quadro-data';
 
 let _kv;
 function getKV() {
-  if (!_kv) _kv = require('@vercel/kv').kv;
+  if (!_kv) {
+    const { Redis } = require('@upstash/redis');
+    _kv = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  }
   return _kv;
 }
 
