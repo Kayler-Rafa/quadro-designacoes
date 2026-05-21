@@ -112,6 +112,34 @@ app.get('/api/available/:date/:role', async (req, res) => {
   }
 });
 
+// GET health / diagnostics
+app.get('/api/health', async (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const info = {
+    isVercel: !!process.env.VERCEL,
+    hasUpstashUrl: !!process.env.UPSTASH_REDIS_REST_URL,
+    hasUpstashToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+    xlsxExists: fs.existsSync(path.join(__dirname, 'PM.xlsx')),
+    publicExists: fs.existsSync(path.join(__dirname, 'public')),
+  };
+  try {
+    const all = await db.getAllAssignments();
+    info.dbOk = true;
+    info.assignmentCount = all.length;
+  } catch (e) {
+    info.dbError = e.message;
+  }
+  try {
+    const people = gen.getPeople();
+    info.peopleOk = true;
+    info.volantes = people.V.length;
+  } catch (e) {
+    info.peopleError = e.message;
+  }
+  res.json(info);
+});
+
 // GET meeting dates for a month
 app.get('/api/dates/:year/:month', (req, res) => {
   res.json(gen.getMeetingDates(parseInt(req.params.year), parseInt(req.params.month)));
