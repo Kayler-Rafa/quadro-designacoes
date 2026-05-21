@@ -122,8 +122,8 @@ app.get('/api/health', async (req, res) => {
   const path = require('path');
   const info = {
     isVercel: !!process.env.VERCEL,
-    hasUpstashUrl: !!process.env.UPSTASH_REDIS_REST_URL,
-    hasUpstashToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+    hasUpstashUrl: !!process.env.KV_REST_API_URL,
+    hasUpstashToken: !!process.env.KV_REST_API_TOKEN,
     xlsxExists: fs.existsSync(path.join(__dirname, 'PM.xlsx')),
     publicExists: fs.existsSync(path.join(__dirname, 'public')),
   };
