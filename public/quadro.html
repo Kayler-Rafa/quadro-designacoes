@@ -47,6 +47,7 @@
     .a4-page {
       background: #fff;
       width: min(794px, 100%);
+      min-height: 1123px;          /* altura A4 @ 96dpi */
       margin: 0 auto 24px;
       box-shadow: 0 2px 16px rgba(0,0,0,.15);
       box-sizing: border-box;
@@ -54,7 +55,17 @@
       font-size: 12px;
       color: #111;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
+    /* Conteúdo que expande para preencher o restante da página */
+    .a4-fill {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .a4-fill > .rvm-wrap { flex: 1; }
+    .a4-fill > .qa-table-wrap { flex: 1; }
 
     /* ══════════════════════════════════════════════════════
        CAPA
@@ -265,12 +276,20 @@
     .rvm-item-comentarios .rvm-item-titulo { color: #999; font-style: italic; }
 
     /* ══════════════════════════════════════════════════════
-       MAPA
+       MAPA — ocupa toda a folha
     ══════════════════════════════════════════════════════ */
-    .mapa-wrap { padding: 16px; }
+    .mapa-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px 16px;
+    }
     .mapa-wrap img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      max-height: 1020px;
+      object-fit: contain;
       display: block;
       border-radius: 4px;
     }
@@ -538,12 +557,17 @@ function buildPagesRVM(rvm, year, month) {
       <div class="rvm-wrap" style="padding:20px;color:#aaa;font-style:italic">Programação não disponível para este mês.</div>
     </div>`;
   }
-  // 1 semana por página (para caber bem)
-  return rvm.map(s => `
-    <div class="a4-page">
-      <div class="qa-page-title">Programação da Reunião de Meio de Semana</div>
-      <div class="rvm-wrap">${renderRvmWeek(s)}</div>
-    </div>`).join('');
+  // 2 semanas por página
+  const pages = [];
+  for (let i = 0; i < rvm.length; i += 2) {
+    const chunk = rvm.slice(i, i + 2);
+    pages.push(`
+      <div class="a4-page">
+        <div class="qa-page-title">Programação da Reunião de Meio de Semana</div>
+        <div class="a4-fill"><div class="rvm-wrap">${chunk.map(renderRvmWeek).join('')}</div></div>
+      </div>`);
+  }
+  return pages.join('');
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -565,7 +589,7 @@ function buildPageRFS(rfs, year, month) {
   return `
   <div class="a4-page">
     <div class="qa-page-title">Reuniões de Fim de Semana</div>
-    <div class="qa-table-wrap">
+    <div class="a4-fill"><div class="qa-table-wrap">
       <table class="qa-table">
         <thead><tr>
           <th class="left" style="width:60px">Data</th>
@@ -575,7 +599,7 @@ function buildPageRFS(rfs, year, month) {
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>
+    </div></div>
   </div>`;
 }
 
@@ -689,6 +713,7 @@ function buildPageMapa() {
       <img src="/mapa/mapa 5000.png" alt="Mapa do Território de Candeias" />
     </div>
   </div>`;
+  /* mapa-wrap já tem flex:1 via CSS, expande até preencher a folha */
 }
 
 /* ══════════════════════════════════════════════════════════
