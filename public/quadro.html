@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quadro de Anúncios</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ══════════════════════════════════════════════════════
+       CONTROLES (visíveis na tela, ocultos na impressão)
+    ══════════════════════════════════════════════════════ */
+    .quadro-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .quadro-controls select {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      font-weight: 600;
+      background: #fff;
+      cursor: pointer;
+    }
+    .btn-print {
+      background: #1a5c1a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-print:hover { background: #267a26; }
+    .quadro-empty {
+      text-align: center;
+      padding: 60px;
+      color: #aaa;
+      font-size: 15px;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       ÁREA IMPRESSA  — simulação de A4 na tela
+    ══════════════════════════════════════════════════════ */
+    #quadroOutput { display: none; }
+    #quadroOutput.visible { display: block; }
+
+    .a4-page {
+      background: #fff;
+      width: 794px;          /* ≈ A4 @ 96dpi */
+      min-height: 1123px;
+      margin: 0 auto 24px;
+      padding: 36px 40px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.15);
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #111;
+      position: relative;
+    }
+
+    /* ── Cabeçalho da página A4 ── */
+    .qa-header {
+      text-align: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #111;
+    }
+    .qa-header h1 {
+      font-size: 17px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 2px;
+    }
+    .qa-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      text-transform: capitalize;
+    }
+
+    /* ── Título de seção ── */
+    .qa-section { margin-bottom: 18px; }
+    .qa-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      background: #111;
+      color: #fff;
+      padding: 5px 10px;
+      margin-bottom: 0;
+    }
+
+    /* ── Tabelas gerais ── */
+    .qa-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .qa-table thead th {
+      background: #333;
+      color: #fff;
+      padding: 5px 7px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      border: 1px solid #555;
+    }
+    .qa-table thead th.left { text-align: left; }
+    .qa-table tbody td {
+      padding: 5px 7px;
+      border: 1px solid #ddd;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .qa-table tbody td.left { text-align: left; }
+    .qa-table tbody tr:nth-child(even) td { background: #f7f7f7; }
+    .qa-table .td-data {
+      font-weight: 700;
+      white-space: nowrap;
+      text-align: left;
+      width: 70px;
+    }
+
+    /* ── Duas colunas lado a lado ── */
+    .qa-two-col {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .qa-two-col > .qa-section { flex: 1; margin-bottom: 0; }
+
+    /* ══════════════════════════════════════════════════════
+       RVM
+    ══════════════════════════════════════════════════════ */
+    .rvm-semana {
+      margin-bottom: 14px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .rvm-semana-header {
+      background: #222;
+      color: #fff;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rvm-semana-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      font-size: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .rvm-meta-cell {
+      padding: 4px 8px;
+      border-right: 1px solid #eee;
+    }
+    .rvm-meta-cell:last-child { border-right: none; }
+    .rvm-meta-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #888;
+      display: block;
+    }
+
+    /* Bloco de seção RVM */
+    .rvm-block-title {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 8px;
+      letter-spacing: .3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rvm-block-title .cantico {
+      font-size: 9px;
+      font-weight: 600;
+      opacity: .85;
+      margin-left: auto;
+    }
+    .rvm-tesouros .rvm-block-title { background: #154360; color: #fff; }
+    .rvm-escola   .rvm-block-title { background: #d4ac0d; color: #1a1a1a; }
+    .rvm-vida     .rvm-block-title { background: #7b241c; color: #fff; }
+
+    .rvm-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 3px 8px;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 10px;
+    }
+    .rvm-item:last-child { border-bottom: none; }
+    .rvm-item-titulo { flex: 1; color: #333; }
+    .rvm-item-pessoa {
+      font-weight: 700;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+    .rvm-item-sala {
+      font-size: 9px;
+      color: #888;
+      margin-left: 4px;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       GRUPOS  (planilha 6 colunas)
+    ══════════════════════════════════════════════════════ */
+    .grupos-qa-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    .grupos-qa-table th, .grupos-qa-table td {
+      border: 1px solid #bbb;
+      padding: 3px 5px;
+      text-align: center;
+      vertical-align: top;
+    }
+    .grupos-qa-table .gh { font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 5px 4px; }
+    .grupos-qa-table .gi { font-size: 9px; font-weight: 600; line-height: 1.5; }
+    .grupos-qa-table .gt { background: #ddd; font-weight: 700; font-size: 10px; }
+    .grupos-qa-table .gm:nth-child(even) { background: #f7f7f7; }
+    /* cores dos cabeçalhos */
+    .grupos-qa-table [data-col="0"] { background: #c9aee5; color: #3b0070; }
+    .grupos-qa-table [data-col="1"] { background: #88cc88; color: #0a4a0a; }
+    .grupos-qa-table [data-col="2"] { background: #f0d060; color: #5a3a00; }
+    .grupos-qa-table [data-col="3"] { background: #80b8e8; color: #002f6a; }
+    .grupos-qa-table [data-col="4"] { background: #f0a0a8; color: #6a0020; }
+    .grupos-qa-table [data-col="5"] { background: #90cca0; color: #0a4020; }
+
+    /* ══════════════════════════════════════════════════════
+       IMPRESSÃO  @media print
+    ══════════════════════════════════════════════════════ */
+    @media print {
+      /* Oculta tudo exceto o output */
+      .navbar, .app > .section > .section-header,
+      .quadro-controls, .btn-print { display: none !important; }
+      .app { padding: 0; max-width: none; }
+      #quadroOutput { display: block !important; }
+
+      .a4-page {
+        width: 100%;
+        box-shadow: none;
+        margin: 0;
+        padding: 1cm 1.2cm;
+        page-break-after: always;
+        min-height: auto;
+      }
+      .a4-page:last-child { page-break-after: avoid; }
+
+      @page { size: A4; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <ul class="navbar-links">
+      <li><a href="/" class="nav-link">Designações</a></li>
+      <li><a href="/rvm.html" class="nav-link">RVM</a></li>
+      <li><a href="/rfs.html" class="nav-link">RFS</a></li>
+      <li><a href="/grupos.html" class="nav-link">Grupos</a></li>
+      <li><a href="/quadro.html" class="nav-link active">Quadro</a></li>
+    </ul>
+  </nav>
+
+  <div class="app">
+    <section class="section">
+      <div class="section-header">
+        <h1 class="section-title">Quadro de Anúncios</h1>
+      </div>
+
+      <div class="quadro-controls">
+        <select id="selMes"></select>
+        <button class="generate-btn" id="btnGerar">Gerar Quadro</button>
+        <button class="btn-print" id="btnPrint" style="display:none">🖨️ Imprimir / Salvar PDF</button>
+      </div>
+
+      <div id="quadroOutput"></div>
+    </section>
+  </div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   UTILITÁRIOS
+══════════════════════════════════════════════════════════ */
+const MESES     = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES_ABR = ['jan','fev','mar','abr','mai','jun',
+                   'jul','ago','set','out','nov','dez'];
+const DIAS_ABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+const h = s => String(s ?? '')
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function dayOfWeekAbr(iso) {
+  const [y,m,d] = iso.split('-').map(Number);
+  return DIAS_ABREV[new Date(y,m-1,d).getDay()];
+}
+function formatDate(iso) {
+  const [,m,d] = iso.split('-');
+  return `${parseInt(d)}/${parseInt(m)}`;
+}
+function formatDateLong(iso) {
+  const [y,m,d] = iso.split('-');
+  return `${parseInt(d)} de ${MESES[parseInt(m)-1]} de ${y}`;
+}
+function monthLabel(year, month) {
+  return `${MESES[month-1]} de ${year}`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   POPULAR SELETOR DE MÊS  (hoje ± 6 meses)
+══════════════════════════════════════════════════════════ */
+(function buildMonthSelector() {
+  const sel = document.getElementById('selMes');
+  const today = new Date();
+  for (let delta = -3; delta <= 6; delta++) {
+    const d = new Date(today.getFullYear(), today.getMonth() + delta, 1);
+    const y = d.getFullYear(), m = d.getMonth() + 1;
+    const opt = document.createElement('option');
+    opt.value = `${y}-${m}`;
+    opt.textContent = `${MESES[m-1]} ${y}`;
+    if (delta === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+})();
+
+/* ══════════════════════════════════════════════════════════
+   FETCH PARALELO DE TODOS OS DADOS
+══════════════════════════════════════════════════════════ */
+async function fetchAll(year, month) {
+  const [desig, allRfs, allRvm, grupos] = await Promise.all([
+    fetch(`/api/assignments/${year}/${month}`).then(r => r.json()),
+    fetch('/api/rfs').then(r => r.json()),
+    fetch('/api/rvm').then(r => r.json()),
+    fetch('/api/grupos').then(r => r.json()),
+  ]);
+  const prefix = `${year}-${String(month).padStart(2,'0')}`;
+  const rfs = allRfs.filter(r => r.date.startsWith(prefix));
+  const rvm = allRvm.filter(s => s.date.startsWith(prefix));
+  return { desig, rfs, rvm, grupos };
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAGE 1 — Designações + Limpeza
+══════════════════════════════════════════════════════════ */
+function buildPageDesig(desig, year, month) {
+  /* --- Designações mecânicas --- */
+  const rowsDesig = desig.map(a => `
+    <tr>
+      <td class="td-data">${dayOfWeekAbr(a.date)}, ${formatDate(a.date)}</td>
+      <td>${h(a.indicador_externo||'—')}</td>
+      <td>${h(a.indicador_interno||'—')}</td>
+      <td>${h(a.volante1||'—')}</td>
+      <td>${h(a.volante2||'—')}</td>
+      <td>${h(a.audio||'—')}</td>
+    </tr>`).join('');
+
+  const tableDesig = desig.length > 0 ? `
+    <table class="qa-table">
+      <thead><tr>
+        <th class="left" style="width:72px">Data</th>
+        <th>Ind. Externo</th>
+        <th>Ind. Interno</th>
+        <th>Vol. 1</th>
+        <th>Vol. 2</th>
+        <th>Áudio/Vídeo</th>
+      </tr></thead>
+      <tbody>${rowsDesig}</tbody>
+    </table>` : '<p style="color:#aaa;font-style:italic;padding:8px">Designações não geradas para este mês.</p>';
+
+  /* --- Limpeza: agrupa por par consecutivo --- */
+  const limpGroups = [];
+  let lastLimp = null, startDate = null;
+  for (const a of desig) {
+    if (a.limpeza !== lastLimp) {
+      if (lastLimp !== null) limpGroups.push({ pair: lastLimp, from: startDate, to: desig[desig.indexOf(a)-1].date });
+      lastLimp = a.limpeza;
+      startDate = a.date;
+    }
+  }
+  if (lastLimp) limpGroups.push({ pair: lastLimp, from: startDate, to: desig[desig.length-1].date });
+
+  const rowsLimp = limpGroups.map(g => `
+    <tr>
+      <td class="td-data left">${formatDate(g.from)} – ${formatDate(g.to)}</td>
+      <td class="left">${h(g.pair||'—')}</td>
+    </tr>`).join('');
+
+  const tableLimp = limpGroups.length > 0 ? `
+    <table class="qa-table">
+      <thead><tr>
+        <th class="left" style="width:90px">Período</th>
+        <th class="left">Grupos Responsáveis</th>
+      </tr></thead>
+      <tbody>${rowsLimp}</tbody>
+    </table>` : '<p style="color:#aaa;font-style:italic;padding:8px">—</p>';
+
+  return `
+    <div class="a4-page">
+      <div class="qa-header">
+        <h1>Congregação de Candeias</h1>
+        <h2>Quadro de Anúncios — ${monthLabel(year, month)}</h2>
+      </div>
+
+      <div class="qa-section">
+        <div class="qa-section-title">Designações Mecânicas</div>
+        ${tableDesig}
+      </div>
+
+      <div class="qa-section">
+        <div class="qa-section-title">Limpeza do Salão</div>
+        ${tableLimp}
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAGE 2 — RFS
+══════════════════════════════════════════════════════════ */
+function buildPageRFS(rfs, year, month) {
+  const rows = rfs.map(r => {
+    const congr = r.congregacao ? ` (${h(r.congregacao)})` : '';
+    return `<tr>
+      <td class="td-data">${dayOfWeekAbr(r.date)}, ${formatDate(r.date)}</td>
+      <td class="left">${h(r.tema||'—')}</td>
+      <td>${h(r.orador||'—')}${congr}</td>
+      <td>${h(r.presidente||'—')}</td>
+    </tr>`;
+  }).join('');
+
+  const table = rfs.length > 0 ? `
+    <table class="qa-table">
+      <thead><tr>
+        <th class="left" style="width:70px">Data</th>
+        <th class="left">Tema do Discurso</th>
+        <th>Orador (Congregação)</th>
+        <th>Presidente</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>` : '<p style="color:#aaa;font-style:italic;padding:8px">Nenhuma reunião de fim de semana registrada para este mês.</p>';
+
+  return `
+    <div class="a4-page">
+      <div class="qa-header">
+        <h1>Congregação de Candeias</h1>
+        <h2>Reunião de Fim de Semana — ${monthLabel(year, month)}</h2>
+      </div>
+      <div class="qa-section">
+        <div class="qa-section-title">Reunião de Fim de Semana</div>
+        ${table}
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAGE 3 — RVM  (2 semanas por página)
+══════════════════════════════════════════════════════════ */
+function renderSemana(s) {
+  const metaOracoes = `<span class="rvm-meta-label">Oração Inicial</span>${h(s.oracaoInicial||'—')}`;
+  const metaPres    = `<span class="rvm-meta-label">Presidente / Ajudante</span>${h(s.presidente||'—')} / ${h(s.ajudante||'—')}`;
+  const metaCanticos= `<span class="rvm-meta-label">Cânticos</span>${(s.canticos||[]).join(' · ')}`;
+
+  const mkItems = (arr, tipo) => (arr||[]).map(it => {
+    if (it.tipo === 'ebc') return `<div class="rvm-item">
+      <span class="rvm-item-titulo">${h(it.titulo)}</span>
+      <span class="rvm-item-pessoa">${h(it.dirigente)} / <em style="font-weight:400">${h(it.leitor)}</em></span>
+    </div>`;
+    if (it.tipo === 'comentarios') return `<div class="rvm-item">
+      <span class="rvm-item-titulo" style="color:#999">${h(it.titulo)}</span>
+    </div>`;
+    const salaB = it.salaB ? `<span class="rvm-item-sala">| B: ${h(it.salaB)}</span>` : '';
+    return `<div class="rvm-item">
+      <span class="rvm-item-titulo">${h(it.titulo)}</span>
+      <span class="rvm-item-pessoa">${h(it.salaA||it.pessoa||'—')}${salaB}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="rvm-semana">
+      <div class="rvm-semana-header">
+        <span>Semana de ${formatDateLong(s.date)}</span>
+        <span style="font-weight:400;font-size:10px">Leitura: ${h(s.leitura||'')}</span>
+      </div>
+      <div class="rvm-semana-meta">
+        <div class="rvm-meta-cell">${metaPres}</div>
+        <div class="rvm-meta-cell">${metaOracoes}<br><span class="rvm-meta-label" style="margin-top:4px">Oração Final</span>${h(s.oracaoFinal||'—')}</div>
+        <div class="rvm-meta-cell">${metaCanticos}</div>
+      </div>
+      <div class="rvm-tesouros">
+        <div class="rvm-block-title">Tesouros da Palavra de Deus</div>
+        ${mkItems(s.tesouros, 'tesouros')}
+      </div>
+      <div class="rvm-escola">
+        <div class="rvm-block-title">Faça Seu Melhor no Ministério</div>
+        ${mkItems(s.escola, 'escola')}
+      </div>
+      <div class="rvm-vida">
+        <div class="rvm-block-title">Nossa Vida Cristã</div>
+        ${mkItems(s.vida, 'vida')}
+      </div>
+    </div>`;
+}
+
+function buildPagesRVM(rvm, year, month) {
+  if (rvm.length === 0) {
+    return `<div class="a4-page">
+      <div class="qa-header">
+        <h1>Congregação de Candeias</h1>
+        <h2>Reunião de Meio de Semana — ${monthLabel(year, month)}</h2>
+      </div>
+      <p style="color:#aaa;font-style:italic;padding:8px">Programação não disponível para este mês.</p>
+    </div>`;
+  }
+  // 2 semanas por página
+  const pages = [];
+  for (let i = 0; i < rvm.length; i += 2) {
+    const chunk = rvm.slice(i, i + 2);
+    pages.push(`
+      <div class="a4-page">
+        <div class="qa-header">
+          <h1>Congregação de Candeias</h1>
+          <h2>Reunião de Meio de Semana — ${monthLabel(year, month)}</h2>
+        </div>
+        <div class="qa-section">
+          <div class="qa-section-title">Reunião de Meio de Semana</div>
+          ${chunk.map(renderSemana).join('')}
+        </div>
+      </div>`);
+  }
+  return pages.join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   PAGE FINAL — Grupos de Campo
+══════════════════════════════════════════════════════════ */
+function buildPageGrupos(grupos) {
+  if (!grupos || grupos.length === 0) {
+    return `<div class="a4-page"><p style="color:#aaa;padding:8px">Grupos não disponíveis.</p></div>`;
+  }
+  const total = grupos.reduce((s,g) => s + (g.total||0), 0);
+  const maxM  = Math.max(...grupos.map(g => g.membros.length));
+
+  const headNome = grupos.map((g,i) =>
+    `<th class="gh" data-col="${i}">${h(g.nome)}</th>`).join('');
+  const headInfo = grupos.map((g,i) =>
+    `<td class="gi" data-col="${i}">Dirigente: ${h(g.dirigente)}<br>Ajudante: ${h(g.ajudante)}<br>Local: ${h(g.local)}</td>`).join('');
+  const headTotais = grupos.map(g =>
+    `<td class="gt">Total = ${g.total}</td>`).join('');
+
+  let membrosRows = '';
+  for (let i = 0; i < maxM; i++) {
+    const cells = grupos.map(g => {
+      const nome = g.membros[i] || '';
+      return nome ? `<td class="gm">${h(nome)}</td>` : `<td class="gm" style="color:#ddd">—</td>`;
+    }).join('');
+    membrosRows += `<tr>${cells}</tr>`;
+  }
+
+  return `
+    <div class="a4-page">
+      <div class="qa-header">
+        <h1>Congregação de Candeias</h1>
+        <h2>Grupos de Campo — Total Geral de Publicadores = ${total}</h2>
+      </div>
+      <div class="qa-section">
+        <div class="qa-section-title">Designação de Grupos de Campo de Candeias</div>
+        <table class="grupos-qa-table">
+          <thead>
+            <tr>${headNome}</tr>
+            <tr>${headInfo}</tr>
+            <tr>${headTotais}</tr>
+          </thead>
+          <tbody>${membrosRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   GERAR QUADRO
+══════════════════════════════════════════════════════════ */
+document.getElementById('btnGerar').addEventListener('click', async () => {
+  const [year, month] = document.getElementById('selMes').value.split('-').map(Number);
+  const btn  = document.getElementById('btnGerar');
+  const out  = document.getElementById('quadroOutput');
+  btn.disabled = true;
+  btn.textContent = 'Carregando…';
+  out.className  = '';
+  out.innerHTML  = '<div class="quadro-empty">Buscando dados…</div>';
+
+  try {
+    const { desig, rfs, rvm, grupos } = await fetchAll(year, month);
+
+    const html =
+      buildPageDesig(desig, year, month) +
+      buildPageRFS(rfs, year, month)     +
+      buildPagesRVM(rvm, year, month)    +
+      buildPageGrupos(grupos);
+
+    out.innerHTML  = html;
+    out.className  = 'visible';
+    document.getElementById('btnPrint').style.display = '';
+  } catch(e) {
+    out.innerHTML = `<div class="quadro-empty">Erro ao carregar dados: ${h(e.message)}</div>`;
+    out.className = 'visible';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Gerar Quadro';
+  }
+});
+
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+</script>
+</body>
+</html>
