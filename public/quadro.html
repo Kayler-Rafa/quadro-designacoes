@@ -157,6 +157,18 @@
       padding: 6px 12px;
       margin-bottom: 0;
     }
+    /* Label de sub-seção dentro de uma página combinada */
+    .qa-section-label {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      background: #333;
+      color: #fff;
+      padding: 5px 16px;
+      margin-top: 10px;
+    }
+    .qa-section-label:first-child { margin-top: 0; }
     .qa-table {
       width: 100%;
       border-collapse: collapse;
@@ -571,9 +583,9 @@ function buildPagesRVM(rvm, year, month) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   PÁGINA RFS
+   PÁGINA ÚNICA: RFS + DESIGNAÇÕES + LIMPEZA
 ══════════════════════════════════════════════════════════ */
-function buildPageRFS(rfs, year, month) {
+function buildPageRFS(rfs) {
   const rows = rfs.length
     ? rfs.map(r => {
         const congr = r.congregacao ? `<br><span style="font-size:10px;color:#888">(${h(r.congregacao)})</span>` : '';
@@ -584,29 +596,24 @@ function buildPageRFS(rfs, year, month) {
           <td>${h(r.presidente||'—')}</td>
         </tr>`;
       }).join('')
-    : `<tr><td colspan="4" style="text-align:center;color:#aaa;padding:14px;font-style:italic">Nenhuma reunião registrada para este mês.</td></tr>`;
+    : `<tr><td colspan="4" style="text-align:center;color:#aaa;padding:10px;font-style:italic">Nenhuma reunião registrada.</td></tr>`;
 
   return `
-  <div class="a4-page">
-    <div class="qa-page-title">Reuniões de Fim de Semana</div>
-    <div class="a4-fill"><div class="qa-table-wrap">
+    <div class="qa-section-label">Reuniões de Fim de Semana</div>
+    <div class="qa-table-wrap" style="padding-bottom:0">
       <table class="qa-table">
         <thead><tr>
-          <th class="left" style="width:60px">Data</th>
+          <th class="left" style="width:56px">Data</th>
           <th class="left">Tema</th>
-          <th style="width:160px">Orador<br>(Congregação)</th>
-          <th style="width:130px">Presidente</th>
+          <th style="width:150px">Orador (Congregação)</th>
+          <th style="width:120px">Presidente</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
-    </div></div>
-  </div>`;
+    </div>`;
 }
 
-/* ══════════════════════════════════════════════════════════
-   PÁGINA DESIGNAÇÕES + LIMPEZA
-══════════════════════════════════════════════════════════ */
-function buildPageDesig(desig, year, month) {
+function buildPageDesig(desig) {
   const rowsDesig = desig.length
     ? desig.map(a => `<tr>
         <td class="td-date">${fmtShort(a.date)}</td>
@@ -616,23 +623,21 @@ function buildPageDesig(desig, year, month) {
         <td>${h(a.volante2||'—')}</td>
         <td>${h(a.audio||'—')}</td>
       </tr>`).join('')
-    : `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:14px;font-style:italic">Designações não geradas para este mês.</td></tr>`;
+    : `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:10px;font-style:italic">Designações não geradas para este mês.</td></tr>`;
 
-  // Limpeza — cada data separada (não agrupada)
   const rowsLimp = desig.length
     ? desig.map(a => `<tr>
         <td class="td-date">${fmtShort(a.date)}</td>
         <td class="left">${h(a.limpeza||'—')}</td>
       </tr>`).join('')
-    : `<tr><td colspan="2" style="text-align:center;color:#aaa;padding:14px;font-style:italic">—</td></tr>`;
+    : `<tr><td colspan="2" style="text-align:center;color:#aaa;padding:10px;font-style:italic">—</td></tr>`;
 
   return `
-  <div class="a4-page">
-    <div class="qa-page-title">Designações Mecânicas</div>
-    <div class="qa-table-wrap">
+    <div class="qa-section-label">Designações Mecânicas</div>
+    <div class="qa-table-wrap" style="padding-bottom:0">
       <table class="qa-table">
         <thead><tr>
-          <th class="left" style="width:60px">Data</th>
+          <th class="left" style="width:56px">Data</th>
           <th>Ind. Externo</th>
           <th>Ind. Interno</th>
           <th>Volante 1</th>
@@ -643,15 +648,25 @@ function buildPageDesig(desig, year, month) {
       </table>
     </div>
 
-    <div class="qa-page-title" style="font-size:14px;padding-top:8px">Programação de Limpeza</div>
-    <div class="qa-table-wrap" style="padding-top:10px">
+    <div class="qa-section-label" style="margin-top:10px">Programação de Limpeza</div>
+    <div class="qa-table-wrap">
       <table class="qa-table">
         <thead><tr>
-          <th class="left" style="width:60px">Reunião</th>
+          <th class="left" style="width:56px">Reunião</th>
           <th class="left">Grupos Responsáveis</th>
         </tr></thead>
         <tbody>${rowsLimp}</tbody>
       </table>
+    </div>`;
+}
+
+function buildPageRFSDesigLimp(rfs, desig, year, month) {
+  return `
+  <div class="a4-page">
+    <div class="qa-page-title">Designações — ${monthLabel(year, month)}</div>
+    <div class="a4-fill">
+      ${buildPageRFS(rfs)}
+      ${buildPageDesig(desig)}
     </div>
   </div>`;
 }
@@ -731,13 +746,12 @@ document.getElementById('btnGerar').addEventListener('click', async () => {
   try {
     const { desig, rfs, rvm, grupos } = await fetchAll(year, month);
 
-    // ORDEM DO PDF: Capa → RVM → RFS → Designações+Limpeza → Grupos → Mapa
+    // ORDEM: Capa → RVM → [RFS + Designações + Limpeza] → Grupos → Mapa
     out.innerHTML =
-      buildCapa(year, month)          +
-      buildPagesRVM(rvm, year, month) +
-      buildPageRFS(rfs, year, month)  +
-      buildPageDesig(desig, year, month) +
-      buildPageGrupos(grupos)         +
+      buildCapa(year, month)                       +
+      buildPagesRVM(rvm, year, month)              +
+      buildPageRFSDesigLimp(rfs, desig, year, month) +
+      buildPageGrupos(grupos)                      +
       buildPageMapa();
 
     out.className = 'visible';
