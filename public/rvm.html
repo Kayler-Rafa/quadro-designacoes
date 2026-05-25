@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RVM — Reunião de Meio de Semana</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ══════════════════════════════════════════════════════════
+       LAYOUT GERAL
+    ══════════════════════════════════════════════════════════ */
+    .rvm-page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 20px 16px 56px;
+    }
+
+    /* ── Barra de ação ── */
+    .rvm-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .rvm-toolbar h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111;
+    }
+    .btn-refresh {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 18px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-refresh:hover   { background: #333; }
+    .btn-refresh:active  { background: #555; }
+    .btn-refresh.loading svg { animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ══════════════════════════════════════════════════════════
+       ANOS
+    ══════════════════════════════════════════════════════════ */
+    .year-section { margin-bottom: 32px; }
+
+    .year-label {
+      font-size: 22px;
+      font-weight: 800;
+      color: #111;
+      letter-spacing: -.5px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 3px solid #111;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       CARDS DE MÊS
+    ══════════════════════════════════════════════════════════ */
+    .month-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.10);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    /* ── Cabeçalho do card de mês ── */
+    .month-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .12s;
+      background: #fff;
+    }
+    .month-card-header:hover { background: #f5f5f5; }
+
+    .month-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #111;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .month-card-titles { flex: 1; }
+    .month-card-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.2;
+    }
+    .month-card-count {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    .month-card-chevron {
+      color: #aaa;
+      font-size: 18px;
+      transition: transform .2s;
+      flex-shrink: 0;
+    }
+    .month-card.open .month-card-chevron { transform: rotate(180deg); }
+
+    /* ── Corpo expansível ── */
+    .month-card-body {
+      display: none;
+      border-top: 1px solid #eee;
+    }
+    .month-card.open .month-card-body { display: block; }
+
+    /* ══════════════════════════════════════════════════════════
+       NAVEGADOR DE SEMANA
+    ══════════════════════════════════════════════════════════ */
+    .week-navigator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #f7f7f7;
+      border-bottom: 1px solid #eee;
+    }
+
+    .week-nav-btn {
+      width: 34px;
+      height: 34px;
+      border: 1.5px solid #ddd;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      flex-shrink: 0;
+      transition: background .1s, border-color .1s, color .1s;
+    }
+    .week-nav-btn:hover:not(:disabled) { background: #111; border-color: #111; color: #fff; }
+    .week-nav-btn:disabled { opacity: .3; cursor: default; }
+
+    .week-nav-info {
+      flex: 1;
+      text-align: center;
+    }
+    .week-nav-date {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+    }
+    .week-nav-dia {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-top: 1px;
+    }
+    .week-nav-pager {
+      font-size: 11px;
+      color: #bbb;
+      margin-top: 2px;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       PROGRAMAÇÃO DA SEMANA
+    ══════════════════════════════════════════════════════════ */
+
+    /* Info geral */
+    .semana-info {
+      background: #f7f5ec;
+      border-bottom: 2px solid #c8a84b;
+      padding: 10px 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px 20px;
+    }
+    .info-bloco { display: flex; flex-direction: column; gap: 1px; }
+    .info-bloco.full { grid-column: 1 / -1; }
+    .info-bloco label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #999;
+      letter-spacing: .3px;
+    }
+    .info-bloco span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* Seção header */
+    .prog-sh {
+      padding: 8px 18px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+    .prog-sh.abertura { background: #2c2c2c; color: #fff; }
+    .prog-sh.tesouros { background: #154360; color: #fff; }
+    .prog-sh.escola   { background: #d4ac0d; color: #1a1a1a; }
+    .prog-sh.vida     { background: #7b241c; color: #fff; }
+
+    /* Linha de item */
+    .prog-row {
+      display: flex;
+      align-items: flex-start;
+      padding: 8px 18px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+    .prog-row:last-child { border-bottom: none; }
+    .prog-row.alt         { background: #fafafa; }
+    .prog-row.cantico-row { background: #f7f3e7; font-weight: 600; color: #5a3e00; }
+    .prog-row.comentarios { background: #f9f9f9; color: #666; font-style: italic; }
+
+    .prog-titulo { flex: 1; line-height: 1.4; font-weight: 600; }
+
+    /* Tag pessoa */
+    .prog-pessoa { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .pessoa-tag {
+      background: #ececec; border-radius: 4px;
+      padding: 2px 9px; font-size: 12px; font-weight: 600; color: #111;
+    }
+
+    /* Grid salas */
+    .sala-grid {
+      margin-top: 5px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+    }
+    .sala-bloco label { display: block; font-size: 10px; text-transform: uppercase; color: #999; }
+    .sala-bloco .sn   { font-size: 12px; font-weight: 600; color: #111; }
+    .sala-bloco .sn.vazio { color: #bbb; font-weight: 400; }
+
+    /* EBC */
+    .ebc-grid {
+      margin-top: 5px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+    }
+    .ebc-bloco label { display: block; font-size: 10px; text-transform: uppercase; color: #999; }
+    .ebc-bloco span  { font-size: 12px; font-weight: 600; }
+
+    .prog-sub { font-size: 11px; color: #777; font-weight: 400; margin-top: 2px; font-style: italic; }
+
+    /* ── Vazio / erro ── */
+    .rvm-empty {
+      text-align: center; padding: 56px 20px; color: #999; font-size: 14px;
+    }
+    .rvm-empty strong { display: block; font-size: 16px; color: #555; margin-bottom: 6px; }
+
+    /* ── Responsivo ── */
+    @media (max-width: 500px) {
+      .semana-info          { grid-template-columns: 1fr; }
+      .info-bloco.full      { grid-column: 1; }
+      .sala-grid, .ebc-grid { grid-template-columns: 1fr; }
+      .week-nav-date        { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">Quadro de Designações</div>
+    <ul class="navbar-links">
+      <li><a href="/" class="nav-link" data-section="designacoes">Designações</a></li>
+      <li><a href="/rvm.html" class="nav-link active" data-section="rvm">RVM</a></li>
+    </ul>
+  </nav>
+
+  <div class="rvm-page">
+
+    <!-- Barra de ação -->
+    <div class="rvm-toolbar">
+      <h2>Reunião de Meio de Semana</h2>
+      <button class="btn-refresh" id="btnRefresh" onclick="loadRVM()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        Atualizar semanas
+      </button>
+    </div>
+
+    <div id="rvmContent">
+      <div class="rvm-empty"><strong>Carregando…</strong></div>
+    </div>
+
+  </div>
+
+  <script>
+  /* ════════════════════════════════════════════════════════════
+     ESTADO GLOBAL
+  ════════════════════════════════════════════════════════════ */
+  // monthKey → { open: bool, idx: number, weeks: [] }
+  const monthState = {};
+
+  /* ════════════════════════════════════════════════════════════
+     UTILITÁRIOS
+  ════════════════════════════════════════════════════════════ */
+  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                 'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const DIAS  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira',
+                 'Quinta-feira','Sexta-feira','Sábado'];
+
+  const h = str =>
+    String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  function mesLabel(isoDate) {
+    const [y, m] = isoDate.split('-');
+    return `${MESES[parseInt(m) - 1]} ${y}`;
+  }
+  function mesAbrev(isoDate) {
+    return MESES[parseInt(isoDate.split('-')[1]) - 1].slice(0, 3).toUpperCase();
+  }
+  function formatDate(isoDate) {
+    const [y, m, d] = isoDate.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  function diaLabel(isoDate) {
+    const [y, m, d] = isoDate.split('-').map(Number);
+    return DIAS[new Date(y, m - 1, d).getDay()];
+  }
+  function monthKey(isoDate) { return isoDate.slice(0, 7); } // "YYYY-MM"
+  function yearOf(isoDate)    { return isoDate.slice(0, 4); }
+
+  /* ════════════════════════════════════════════════════════════
+     RENDER — PEÇAS DA PROGRAMAÇÃO
+  ════════════════════════════════════════════════════════════ */
+  function rowCantico(texto, sub = '') {
+    return `<div class="prog-row cantico-row">
+      <div class="prog-titulo">
+        ${h(texto)}
+        ${sub ? `<div class="prog-sub">${h(sub)}</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function rowSimples(titulo, pessoa, cls = '') {
+    const tag = pessoa
+      ? `<span class="pessoa-tag">${h(pessoa)}</span>`
+      : `<span style="color:#bbb;font-size:12px;">—</span>`;
+    return `<div class="prog-row ${h(cls)}">
+      <div class="prog-titulo">
+        ${h(titulo)}
+        <div class="prog-pessoa">${tag}</div>
+      </div>
+    </div>`;
+  }
+
+  function rowSalas(titulo, salaA, salaB, cls = '') {
+    const a = salaA ? `<div class="sn">${h(salaA)}</div>` : `<div class="sn vazio">—</div>`;
+    const b = salaB ? `<div class="sn">${h(salaB)}</div>` : `<div class="sn vazio">—</div>`;
+    return `<div class="prog-row ${h(cls)}">
+      <div class="prog-titulo">
+        ${h(titulo)}
+        <div class="sala-grid">
+          <div class="sala-bloco"><label>Salão principal</label>${a}</div>
+          <div class="sala-bloco"><label>Sala B</label>${b}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function rowEBC(titulo, dirigente, leitor, cls = '') {
+    return `<div class="prog-row ${h(cls)}">
+      <div class="prog-titulo">
+        ${h(titulo)}
+        <div class="ebc-grid">
+          <div class="ebc-bloco"><label>Dirigente</label><span>${h(dirigente) || '—'}</span></div>
+          <div class="ebc-bloco"><label>Leitor</label><span>${h(leitor) || '—'}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function rowComentarios(titulo) {
+    return `<div class="prog-row comentarios"><div class="prog-titulo">${h(titulo)}</div></div>`;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     RENDER — PROGRAMAÇÃO COMPLETA DE UMA SEMANA
+  ════════════════════════════════════════════════════════════ */
+  function renderSemanaPrograma(s) {
+    const c = s.canticos;
+
+    const infoHTML = `
+      <div class="semana-info">
+        <div class="info-bloco full">
+          <label>Leitura semanal</label>
+          <span>${h(s.leitura) || '—'}</span>
+        </div>
+        <div class="info-bloco">
+          <label>Presidente</label>
+          <span>${h(s.presidente) || '—'}</span>
+        </div>
+        <div class="info-bloco">
+          <label>Ajudante</label>
+          <span>${h(s.ajudante) || '—'}</span>
+        </div>
+        <div class="info-bloco">
+          <label>Oração inicial</label>
+          <span>${h(s.oracaoInicial) || '—'}</span>
+        </div>
+        <div class="info-bloco">
+          <label>Oração final</label>
+          <span>${h(s.oracaoFinal) || '—'}</span>
+        </div>
+      </div>`;
+
+    const tesHTML = s.tesouros.map((t, i) => {
+      const cls = i % 2 === 1 ? 'alt' : '';
+      const isLeitura = /leitura da bíblia|leitura da biblia/i.test(t.titulo);
+      return isLeitura
+        ? rowSalas(t.titulo, t.salaA, t.salaB, cls)
+        : rowSimples(t.titulo, t.salaA, cls);
+    }).join('');
+
+    const escHTML = s.escola.map((p, i) =>
+      rowSalas(p.titulo, p.salaA, p.salaB, i % 2 === 1 ? 'alt' : '')
+    ).join('');
+
+    const vidaHTML = s.vida.map((p, i) => {
+      const cls = i % 2 === 1 ? 'alt' : '';
+      if (p.tipo === 'ebc')        return rowEBC(p.titulo, p.dirigente, p.leitor, cls);
+      if (p.tipo === 'comentarios') return rowComentarios(p.titulo);
+      return rowSimples(p.titulo, p.pessoa, cls);
+    }).join('');
+
+    return `
+      ${infoHTML}
+      <div class="prog-sh abertura">Abertura</div>
+      ${rowCantico(c[0] ?? '')}
+      <div class="prog-row comentarios"><div class="prog-titulo">Comentários iniciais (1 min)</div></div>
+      <div class="prog-sh tesouros">Tesouros da Palavra de Deus</div>
+      ${tesHTML}
+      <div class="prog-sh escola">Faça seu Melhor no Ministério</div>
+      ${escHTML}
+      <div class="prog-sh vida">Nossa Vida Cristã</div>
+      ${rowCantico(c[1] ?? '')}
+      ${vidaHTML}
+      ${rowCantico(c[2] ?? '', s.oracaoFinal ? `Oração final: ${s.oracaoFinal}` : '')}`;
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     RENDER — NAVEGADOR DE SEMANA (dentro do mês aberto)
+  ════════════════════════════════════════════════════════════ */
+  function renderWeekContent(key) {
+    const { idx, weeks } = monthState[key];
+    const s     = weeks[idx];
+    const total = weeks.length;
+
+    // Atualiza info do navegador
+    document.getElementById(`wdate-${key}`).textContent  = formatDate(s.date);
+    document.getElementById(`wdia-${key}`).textContent   = diaLabel(s.date);
+    document.getElementById(`wpager-${key}`).textContent = `${idx + 1} de ${total}`;
+
+    // Botões
+    document.getElementById(`wprev-${key}`).disabled = idx === 0;
+    document.getElementById(`wnext-${key}`).disabled = idx === total - 1;
+
+    // Programação
+    document.getElementById(`wcontent-${key}`).innerHTML = renderSemanaPrograma(s);
+  }
+
+  function prevWeek(key) {
+    if (monthState[key].idx > 0) {
+      monthState[key].idx--;
+      renderWeekContent(key);
+    }
+  }
+  function nextWeek(key) {
+    const { idx, weeks } = monthState[key];
+    if (idx < weeks.length - 1) {
+      monthState[key].idx++;
+      renderWeekContent(key);
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     TOGGLE DO CARD DE MÊS
+  ════════════════════════════════════════════════════════════ */
+  function toggleMonth(key) {
+    monthState[key].open = !monthState[key].open;
+    const card = document.getElementById(`mcard-${key}`);
+    card.classList.toggle('open', monthState[key].open);
+
+    // Se abriu pela primeira vez, renderiza o conteúdo da semana
+    if (monthState[key].open) {
+      renderWeekContent(key);
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     RENDER COMPLETO DA PÁGINA
+  ════════════════════════════════════════════════════════════ */
+  function renderAll(semanas) {
+    const el = document.getElementById('rvmContent');
+
+    if (!semanas || semanas.length === 0) {
+      el.innerHTML = `<div class="rvm-empty">
+        <strong>Nenhuma semana encontrada</strong>
+        Adicione arquivos .xlsx na pasta <code>semanas/</code> e clique em Atualizar.
+      </div>`;
+      return;
+    }
+
+    // Agrupa: anos → meses → semanas
+    const anos = {};
+    for (const s of semanas) {
+      const ano = yearOf(s.date);
+      const mes = monthKey(s.date);
+      if (!anos[ano])       anos[ano] = {};
+      if (!anos[ano][mes])  anos[ano][mes] = [];
+      anos[ano][mes].push(s);
+
+      // Inicializa estado (preserva o idx se já existia)
+      if (!monthState[mes]) {
+        monthState[mes] = { open: false, idx: 0, weeks: [] };
+      }
+      monthState[mes].weeks = anos[ano][mes];
+    }
+
+    let html = '';
+    for (const ano of Object.keys(anos).sort()) {
+      html += `<div class="year-section"><div class="year-label">${h(ano)}</div>`;
+
+      for (const mes of Object.keys(anos[ano]).sort()) {
+        const weeks  = anos[ano][mes];
+        const isOpen = monthState[mes]?.open ?? false;
+        const abrev  = mesAbrev(weeks[0].date);
+        const nome   = mesLabel(weeks[0].date);
+        const qtd    = weeks.length;
+
+        html += `
+          <div class="month-card ${isOpen ? 'open' : ''}" id="mcard-${h(mes)}">
+
+            <!-- Cabeçalho clicável -->
+            <div class="month-card-header" onclick="toggleMonth('${h(mes)}')">
+              <div class="month-card-icon">${h(abrev)}</div>
+              <div class="month-card-titles">
+                <div class="month-card-name">${h(nome)}</div>
+                <div class="month-card-count">${qtd} semana${qtd !== 1 ? 's' : ''} carregada${qtd !== 1 ? 's' : ''}</div>
+              </div>
+              <span class="month-card-chevron">&#8964;</span>
+            </div>
+
+            <!-- Corpo expandido -->
+            <div class="month-card-body">
+
+              <!-- Navegador de semana -->
+              <div class="week-navigator">
+                <button class="week-nav-btn" id="wprev-${h(mes)}"
+                        onclick="prevWeek('${h(mes)}')" title="Semana anterior">&#8249;</button>
+                <div class="week-nav-info">
+                  <div class="week-nav-date" id="wdate-${h(mes)}">—</div>
+                  <div class="week-nav-dia"  id="wdia-${h(mes)}">—</div>
+                  <div class="week-nav-pager" id="wpager-${h(mes)}">—</div>
+                </div>
+                <button class="week-nav-btn" id="wnext-${h(mes)}"
+                        onclick="nextWeek('${h(mes)}')" title="Próxima semana">&#8250;</button>
+              </div>
+
+              <!-- Programação da semana selecionada -->
+              <div id="wcontent-${h(mes)}"></div>
+
+            </div>
+          </div>`;
+      }
+
+      html += '</div>'; // year-section
+    }
+
+    el.innerHTML = html;
+
+    // Renderiza o conteúdo de todos os meses já abertos
+    for (const [key, st] of Object.entries(monthState)) {
+      if (st.open) renderWeekContent(key);
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     CARGA DA API
+  ════════════════════════════════════════════════════════════ */
+  async function loadRVM() {
+    const btn = document.getElementById('btnRefresh');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      const res  = await fetch('/api/rvm');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderAll(data);
+    } catch (e) {
+      document.getElementById('rvmContent').innerHTML = `
+        <div class="rvm-empty">
+          <strong>Erro ao carregar</strong>${h(e.message)}
+        </div>`;
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
+
+  loadRVM();
+  </script>
+
+</body>
+</html>

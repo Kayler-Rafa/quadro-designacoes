@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RVM — Prévia de Teste</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      background: #e8e8e8;
+      color: #111;
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+    }
+
+    /* ── Wrapper ── */
+    .rvm-card {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.18);
+    }
+
+    /* ── Page header ── */
+    .rvm-header {
+      background: #111;
+      color: #fff;
+      padding: 18px 20px 14px;
+    }
+    .rvm-header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .rvm-header .semana {
+      font-size: 12px;
+      color: #bbb;
+      margin-top: 4px;
+    }
+
+    /* ── Info faixa superior ── */
+    .rvm-info {
+      background: #f4f1e8;
+      border-bottom: 2px solid #c8a84b;
+      padding: 12px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 24px;
+    }
+    .rvm-info .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .rvm-info .info-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #888;
+      letter-spacing: .4px;
+    }
+    .rvm-info .info-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+    }
+    .rvm-info .info-item.full {
+      grid-column: 1 / -1;
+    }
+
+    /* ── Section headers ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: #fff;
+    }
+    .section-header.tesouros  { background: #154360; color: #fff; }
+    .section-header.escola    { background: #d4ac0d; color: #1a1a1a; }
+    .section-header.vida      { background: #7b241c; color: #fff; }
+    .section-header.abertura  { background: #2c2c2c; color: #fff; }
+
+    /* ── Rows ── */
+    .row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 9px 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .row:last-child { border-bottom: none; }
+    .row.shade { background: #fafafa; }
+    .row.cantico-row {
+      background: #f7f3e9;
+      font-weight: 600;
+      color: #5a3e00;
+    }
+    .row.oracao-row {
+      background: #f0f5ff;
+    }
+    .row.comentarios-row {
+      background: #f9f9f9;
+      color: #555;
+      font-style: italic;
+    }
+
+    /* ── Time badge ── */
+    .time-badge {
+      flex-shrink: 0;
+      min-width: 44px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      padding-top: 1px;
+    }
+
+    /* ── Part content ── */
+    .part-content {
+      flex: 1;
+    }
+    .part-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+    .part-theme {
+      font-size: 11px;
+      color: #777;
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    /* ── Sala grid ── */
+    .sala-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+      margin-top: 6px;
+    }
+    .sala-block {}
+    .sala-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #999;
+      letter-spacing: .3px;
+    }
+    .sala-names {
+      font-size: 12px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* ── Single person (no sala) ── */
+    .person-tag {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #333;
+    }
+    .person-tag span {
+      background: #eee;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-weight: 600;
+    }
+
+    /* ── Dirigente/Leitor for EBC ── */
+    .ebc-block {
+      margin-top: 5px;
+      font-size: 12px;
+    }
+    .ebc-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #999;
+    }
+    .ebc-value {
+      font-weight: 600;
+    }
+
+    /* ── Nota de teste ── */
+    .test-banner {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: #856404;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Responsivo ── */
+    @media (max-width: 480px) {
+      .rvm-info { grid-template-columns: 1fr; }
+      .sala-grid { grid-template-columns: 1fr; }
+      .rvm-info .info-item.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="test-banner">
+    ⚠️ <strong>Prévia de Teste — Fase 2</strong> &nbsp;|&nbsp;
+    Dados carregados do arquivo <em>Exemplo.xlsx</em> (semana de 01/06/2026). Esta página é estática e serve para validar o layout antes da implementação dinâmica.
+  </div>
+
+  <div class="rvm-card">
+
+    <!-- ── Cabeçalho ── -->
+    <div class="rvm-header">
+      <h1>Programação da Reunião de Meio de Semana</h1>
+      <div class="semana">Semana de 1º de junho de 2026</div>
+    </div>
+
+    <!-- ── Informações gerais ── -->
+    <div class="rvm-info">
+      <div class="info-item full">
+        <span class="info-label">Leitura semanal</span>
+        <span class="info-value">Jeremias 1‑3</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Presidente</span>
+        <span class="info-value">Eduardo Silva</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Ajudante</span>
+        <span class="info-value">—</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Oração inicial</span>
+        <span class="info-value">Magno Miranda</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Oração final</span>
+        <span class="info-value">Guilherme Alves</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ABERTURA                                   -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-header abertura">Abertura</div>
+
+    <div class="row cantico-row">
+      <span class="time-badge">19:30</span>
+      <div class="part-content">
+        <div class="part-title">Cântico 84</div>
+      </div>
+    </div>
+
+    <div class="row comentarios-row">
+      <span class="time-badge">19:35</span>
+      <div class="part-content">
+        <div class="part-title">Comentários iniciais (1 min)</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TESOUROS DA PALAVRA DE DEUS               -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-header tesouros">Tesouros da Palavra de Deus</div>
+
+    <!-- Parte 1 -->
+    <div class="row">
+      <span class="time-badge">19:36</span>
+      <div class="part-content">
+        <div class="part-title">1. Não tenha medo … Pois "eu estou com você" (10 min.)</div>
+        <div class="person-tag"><span>Nelio Moraes</span></div>
+      </div>
+    </div>
+
+    <!-- Parte 2 -->
+    <div class="row shade">
+      <span class="time-badge">19:46</span>
+      <div class="part-content">
+        <div class="part-title">2. Joias espirituais (10 min.)</div>
+        <div class="person-tag"><span>Eduardo Lira Morais</span></div>
+      </div>
+    </div>
+
+    <!-- Parte 3 — Leitura da Bíblia -->
+    <div class="row">
+      <span class="time-badge">19:56</span>
+      <div class="part-content">
+        <div class="part-title">3. Leitura da Bíblia (4 min.)</div>
+        <div class="sala-grid">
+          <div class="sala-block">
+            <div class="sala-label">Salão principal</div>
+            <div class="sala-names">Mychel Alves</div>
+          </div>
+          <!-- Sala B não informada no exemplo -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- FAÇA SEU MELHOR NO MINISTÉRIO             -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-header escola">Faça seu Melhor no Ministério</div>
+
+    <!-- Parte 4 -->
+    <div class="row">
+      <span class="time-badge">20:00</span>
+      <div class="part-content">
+        <div class="part-title">4. Iniciando conversas (3 min.)</div>
+        <div class="sala-grid">
+          <div class="sala-block">
+            <div class="sala-label">Salão principal</div>
+            <div class="sala-names">Fátima Azevedo / Alda Lima</div>
+          </div>
+          <div class="sala-block">
+            <div class="sala-label">Sala B</div>
+            <div class="sala-names">Rafael Diniz / Kauã Felix</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parte 5 -->
+    <div class="row shade">
+      <span class="time-badge">20:03</span>
+      <div class="part-content">
+        <div class="part-title">5. Cultivando o interesse (4 min.)</div>
+        <div class="sala-grid">
+          <div class="sala-block">
+            <div class="sala-label">Salão principal</div>
+            <div class="sala-names">Maria Lúcia Nascimento / Rosemere Lins</div>
+          </div>
+          <div class="sala-block">
+            <div class="sala-label">Sala B</div>
+            <div class="sala-names">Eduardo Lira / Josimar Felizardo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parte 6 -->
+    <div class="row">
+      <span class="time-badge">20:07</span>
+      <div class="part-content">
+        <div class="part-title">6. Fazendo discípulos (5 min.)</div>
+        <div class="sala-grid">
+          <div class="sala-block">
+            <div class="sala-label">Salão principal</div>
+            <div class="sala-names">Magno Miranda / Eduardo Feitosa</div>
+          </div>
+          <div class="sala-block">
+            <div class="sala-label">Sala B</div>
+            <div class="sala-names">Guilherme / Helton Lima</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- NOSSA VIDA CRISTÃ                          -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-header vida">Nossa Vida Cristã</div>
+
+    <div class="row cantico-row">
+      <span class="time-badge">20:12</span>
+      <div class="part-content">
+        <div class="part-title">Cântico 76</div>
+      </div>
+    </div>
+
+    <!-- Parte 7 -->
+    <div class="row">
+      <span class="time-badge">20:14</span>
+      <div class="part-content">
+        <div class="part-title">7. Seja corajoso como Jeremias (6 min.)</div>
+        <div class="person-tag"><span>Josimar Junior</span></div>
+      </div>
+    </div>
+
+    <!-- Parte 8 -->
+    <div class="row shade">
+      <span class="time-badge">20:20</span>
+      <div class="part-content">
+        <div class="part-title">8. "Faça uma defesa… com brandura e profundo respeito" (9 min.)</div>
+        <div class="person-tag"><span>John Carvalho</span></div>
+      </div>
+    </div>
+
+    <!-- Parte 9 — Estudo Bíblico de Congregação -->
+    <div class="row">
+      <span class="time-badge">20:29</span>
+      <div class="part-content">
+        <div class="part-title">9. Estudo Bíblico de Congregação (30 min.)</div>
+        <div class="ebc-block">
+          <div class="ebc-label">Dirigente / Leitor</div>
+          <div class="ebc-value">Djamir Freire / Luiz Carlos Carneiro</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comentários finais -->
+    <div class="row comentarios-row">
+      <span class="time-badge">20:59</span>
+      <div class="part-content">
+        <div class="part-title">Comentários finais (3 min.)</div>
+      </div>
+    </div>
+
+    <!-- Cântico final + oração -->
+    <div class="row cantico-row">
+      <span class="time-badge">21:02</span>
+      <div class="part-content">
+        <div class="part-title">Cântico 18</div>
+        <div class="part-theme">Oração final: Guilherme Alves</div>
+      </div>
+    </div>
+
+  </div><!-- /rvm-card -->
+
+</body>
+</html>

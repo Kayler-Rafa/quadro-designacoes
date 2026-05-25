@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const db = require('./db');
 const gen = require('./generator');
+const rvm = require('./rvm-parser');
 
 const app = express();
 app.use(express.json());
@@ -142,6 +143,15 @@ app.get('/api/health', async (req, res) => {
     info.peopleError = e.message;
   }
   res.json(info);
+});
+
+// GET programação RVM (lê pasta /semanas)
+app.get('/api/rvm', (req, res) => {
+  try {
+    res.json(rvm.getAllSemanas());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // GET meeting dates for a month
