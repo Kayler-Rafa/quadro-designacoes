@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa do Território</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .mapa-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Controles de zoom */
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .zoom-btn {
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      width: 36px;
+      height: 36px;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background .15s;
+    }
+    .zoom-btn:hover { background: #444; }
+    .zoom-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+      min-width: 48px;
+      text-align: center;
+    }
+    .zoom-reset {
+      background: #555;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .zoom-reset:hover { background: #333; }
+
+    /* Área da imagem */
+    .mapa-viewport {
+      width: 100%;
+      overflow: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.15);
+      background: #f0f0f0;
+      cursor: grab;
+      user-select: none;
+    }
+    .mapa-viewport:active { cursor: grabbing; }
+
+    .mapa-viewport img {
+      display: block;
+      transform-origin: top left;
+      transition: transform .15s ease;
+      max-width: none;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <ul class="navbar-links">
+      <li><a href="/" class="nav-link">Designações</a></li>
+      <li><a href="/rvm.html" class="nav-link">RVM</a></li>
+      <li><a href="/rfs.html" class="nav-link">RFS</a></li>
+      <li><a href="/grupos.html" class="nav-link">Grupos</a></li>
+      <li><a href="/mapa.html" class="nav-link active">Mapa</a></li>
+    </ul>
+  </nav>
+
+  <div class="app">
+    <section class="section mapa-section">
+      <div class="section-header" style="width:100%">
+        <h1 class="section-title">Mapa do Território</h1>
+      </div>
+
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomOut">−</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+        <button class="zoom-btn" id="zoomIn">+</button>
+        <button class="zoom-reset" id="zoomReset">Resetar</button>
+      </div>
+
+      <div class="mapa-viewport" id="mapaViewport">
+        <img src="/mapa/mapa 5000.png" id="mapaImg" alt="Mapa do Território de Candeias" draggable="false" />
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const img      = document.getElementById('mapaImg');
+    const viewport = document.getElementById('mapaViewport');
+    const label    = document.getElementById('zoomLabel');
+
+    let scale = 1;
+    const STEP = 0.25;
+    const MIN  = 0.25;
+    const MAX  = 4;
+
+    function applyZoom() {
+      img.style.transform = `scale(${scale})`;
+      // Ajusta tamanho do container para acomodar a imagem escalada
+      img.style.width  = (img.naturalWidth  * scale) + 'px';
+      img.style.height = (img.naturalHeight * scale) + 'px';
+      label.textContent = Math.round(scale * 100) + '%';
+    }
+
+    // Aguarda imagem carregar para definir zoom inicial
+    img.addEventListener('load', () => {
+      // Zoom inicial: cabe na largura disponível
+      const available = viewport.clientWidth || window.innerWidth - 48;
+      scale = Math.min(1, parseFloat((available / img.naturalWidth).toFixed(2)));
+      applyZoom();
+    });
+
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      scale = Math.min(MAX, parseFloat((scale + STEP).toFixed(2)));
+      applyZoom();
+    });
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      scale = Math.max(MIN, parseFloat((scale - STEP).toFixed(2)));
+      applyZoom();
+    });
+    document.getElementById('zoomReset').addEventListener('click', () => {
+      const available = viewport.clientWidth || window.innerWidth - 48;
+      scale = Math.min(1, parseFloat((available / img.naturalWidth).toFixed(2)));
+      applyZoom();
+    });
+
+    // Scroll com roda do mouse (Ctrl + roda)
+    viewport.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      scale = e.deltaY < 0
+        ? Math.min(MAX, parseFloat((scale + STEP).toFixed(2)))
+        : Math.max(MIN, parseFloat((scale - STEP).toFixed(2)));
+      applyZoom();
+    }, { passive: false });
+
+    // Drag para mover
+    let isDragging = false, startX, startY, scrollLeft, scrollTop;
+    viewport.addEventListener('mousedown', e => {
+      isDragging = true;
+      startX = e.pageX - viewport.offsetLeft;
+      startY = e.pageY - viewport.offsetTop;
+      scrollLeft = viewport.scrollLeft;
+      scrollTop  = viewport.scrollTop;
+    });
+    document.addEventListener('mouseup',   () => isDragging = false);
+    viewport.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      e.preventDefault();
+      viewport.scrollLeft = scrollLeft - (e.pageX - viewport.offsetLeft - startX);
+      viewport.scrollTop  = scrollTop  - (e.pageY - viewport.offsetTop  - startY);
+    });
+  </script>
+
+</body>
+</html>
