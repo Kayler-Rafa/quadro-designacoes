@@ -297,3 +297,138 @@ body {
   font-size: 15px;
 }
 .empty-state .hint { margin-top: 12px; font-size: 13px; }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVO — MOBILE  (≤ 640px)
+   Desktop permanece idêntico.
+══════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+
+  /* ── Navbar ── */
+  .navbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .navbar-brand {
+    font-size: 13px;
+    /* impede que o brand empurre os links para fora */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  .nav-link {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  /* ── Navegação de mês ── */
+  .month-label {
+    font-size: 18px;
+    min-width: 130px;
+  }
+
+  /* ── Section header: título + botão empilhados ── */
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .section-title {
+    font-size: 20px;
+  }
+  .generate-btn {
+    align-self: stretch;
+    text-align: center;
+    padding: 10px 16px;
+  }
+
+  /* ── Tabela mecânica → cards ──────────────────────────
+     Cabeçalho some; cada <tr> vira um card com label em
+     cada <td> via atributo data-label (adicionado no JS).
+  ──────────────────────────────────────────────────────── */
+  .table-wrapper {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  /* Apenas a tabela mecânica vira cards (não a de limpeza) */
+  #mechanicalTable,
+  #mechanicalTable tbody,
+  #mechanicalTable tr,
+  #mechanicalTable td {
+    display: block;
+    width: 100%;
+  }
+
+  #mechanicalTable thead { display: none; }
+
+  #mechanicalTable tbody tr {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.10);
+    margin-bottom: 14px;
+    overflow: hidden;
+    /* cancela zebra da tabela */
+    background: #fff !important;
+  }
+  #mechanicalTable tbody tr:hover { background: #fff !important; }
+
+  /* Linha de data — vira o cabeçalho do card */
+  #mechanicalTable tbody td.cell-data {
+    background: #111;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: none;
+  }
+  #mechanicalTable tbody td.cell-data::before { display: none; }
+
+  /* Demais células: label à esquerda, chip à direita */
+  #mechanicalTable tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 13px;
+    text-align: right;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  #mechanicalTable tbody td:last-child { border-bottom: none; }
+
+  #mechanicalTable tbody td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: #888;
+    text-align: left;
+    flex-shrink: 0;
+    margin-right: 10px;
+  }
+
+  /* Chip ocupa o espaço restante à direita e é clicável inteiro */
+  #mechanicalTable .name-chip {
+    display: block;
+    text-align: right;
+    padding: 4px 0;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* ── Limpeza: mantém tabela, ajusta fonte ── */
+  .clean-table thead th { font-size: 10px; padding: 10px 8px; }
+  .clean-table tbody td { font-size: 13px; padding: 10px 8px; }
+  .clean-table tbody td.cell-data { padding-left: 10px; font-size: 13px; }
+
+  /* ── Modal: quase full-width ── */
+  .modal {
+    width: calc(100vw - 24px);
+    max-height: 85vh;
+  }
+}

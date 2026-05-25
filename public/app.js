@@ -204,8 +204,17 @@ function render() {
     tdDate.textContent = formatDate(a.date);
     tr.appendChild(tdDate);
 
+    const MOBILE_LABELS = {
+      indicador_externo: 'Ind. Externo',
+      indicador_interno: 'Ind. Interno',
+      volante1: 'Mic. Volante 1',
+      volante2: 'Mic. Volante 2',
+      audio: 'Áudio/Vídeo',
+    };
+
     for (const role of ['indicador_externo', 'indicador_interno', 'volante1', 'volante2', 'audio']) {
       const td = document.createElement('td');
+      td.setAttribute('data-label', MOBILE_LABELS[role]);
       td.appendChild(nameChip(a[role], a.date, role, a.id));
       tr.appendChild(td);
     }
