@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grupos de Campo</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ══════════════════════════════════════════════════════
+       CABEÇALHO DA PÁGINA
+    ══════════════════════════════════════════════════════ */
+    .grupos-page-title {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .grupos-page-title h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #111;
+    }
+    .grupos-total-geral {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TABELA
+    ══════════════════════════════════════════════════════ */
+    .grupos-table-wrapper {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,.13);
+      overflow-x: auto;          /* scroll horizontal no mobile */
+    }
+
+    .grupos-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      min-width: 700px;          /* evita colapso em telas pequenas */
+    }
+
+    /* ── Linha de título dos grupos ── */
+    .grupos-table .row-nome th {
+      padding: 11px 10px 6px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,.08);
+    }
+
+    /* ── Linhas de info (dirigente/ajudante/local) ── */
+    .grupos-table .row-info td {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      border: 1px solid rgba(0,0,0,.08);
+      line-height: 1.4;
+    }
+
+    /* ── Linha de total ── */
+    .grupos-table .row-total td {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      background: #e0e0e0;
+      color: #333;
+      border: 1px solid rgba(0,0,0,.12);
+    }
+
+    /* ── Linhas de membros ── */
+    .grupos-table .row-membro td {
+      padding: 6px 10px;
+      font-size: 13px;
+      text-align: center;
+      border: 1px solid #e8e8e8;
+      color: #222;
+      white-space: nowrap;
+    }
+    .grupos-table .row-membro:nth-child(even) td { background: #f7f7f7; }
+    .grupos-table .row-membro:nth-child(odd)  td { background: #fff; }
+    .grupos-table .row-membro:hover td { background: #eaf2ff; }
+
+    /* Célula vazia */
+    .grupos-table .row-membro td.vazio { color: #ddd; }
+
+    /* ══════════════════════════════════════════════════════
+       CORES POR GRUPO  (aplicadas via atributo data-col)
+    ══════════════════════════════════════════════════════ */
+    /* AMETISTA */
+    [data-col="0"] { background: #c9aee5 !important; color: #3b0070 !important; }
+    /* ESMERALDA */
+    [data-col="1"] { background: #88cc88 !important; color: #0a4a0a !important; }
+    /* CRISÓLITO */
+    [data-col="2"] { background: #f0d060 !important; color: #5a3a00 !important; }
+    /* TOPÁZIO */
+    [data-col="3"] { background: #80b8e8 !important; color: #002f6a !important; }
+    /* JACINTO */
+    [data-col="4"] { background: #f0a0a8 !important; color: #6a0020 !important; }
+    /* PÉROLA */
+    [data-col="5"] { background: #90cca0 !important; color: #0a4020 !important; }
+
+    /* ── Vazio ── */
+    .grupos-empty {
+      text-align: center;
+      padding: 60px 24px;
+      color: #aaa;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <ul class="navbar-links">
+      <li><a href="/" class="nav-link">Designações</a></li>
+      <li><a href="/rvm.html" class="nav-link">RVM</a></li>
+      <li><a href="/rfs.html" class="nav-link">RFS</a></li>
+      <li><a href="/grupos.html" class="nav-link active">Grupos</a></li>
+    </ul>
+  </nav>
+
+  <div class="app">
+
+    <section class="section">
+      <div class="section-header">
+        <h1 class="section-title">Grupos de Campo</h1>
+        <button class="generate-btn" id="refreshBtn">Atualizar</button>
+      </div>
+
+      <div id="gruposContent">
+        <div class="grupos-empty">Carregando…</div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+  const h = s => String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  function renderGrupos(grupos) {
+    const el = document.getElementById('gruposContent');
+
+    if (!grupos || grupos.length === 0) {
+      el.innerHTML = `<div class="grupos-empty">Nenhum grupo encontrado.</div>`;
+      return;
+    }
+
+    const totalGeral = grupos.reduce((s, g) => s + (g.total || 0), 0);
+    const maxMembros = Math.max(...grupos.map(g => g.membros.length));
+
+    /* ── Linha de nomes (cabeçalho colorido) ── */
+    const rowNome = `<tr class="row-nome">
+      ${grupos.map((g, i) =>
+        `<th data-col="${i}">${h(g.nome)}</th>`
+      ).join('')}
+    </tr>`;
+
+    /* ── Linhas de info ── */
+    const rowDirigente = `<tr class="row-info">
+      ${grupos.map((g, i) =>
+        `<td data-col="${i}">Dirigente: ${h(g.dirigente)}</td>`
+      ).join('')}
+    </tr>`;
+
+    const rowAjudante = `<tr class="row-info">
+      ${grupos.map((g, i) =>
+        `<td data-col="${i}">Ajudante: ${h(g.ajudante)}</td>`
+      ).join('')}
+    </tr>`;
+
+    const rowLocal = `<tr class="row-info">
+      ${grupos.map((g, i) =>
+        `<td data-col="${i}">Local: ${h(g.local)}</td>`
+      ).join('')}
+    </tr>`;
+
+    /* ── Linha de totais ── */
+    const rowTotal = `<tr class="row-total">
+      ${grupos.map(g =>
+        `<td>Total ${h(g.nome.charAt(0) + g.nome.slice(1).toLowerCase())} = ${g.total}</td>`
+      ).join('')}
+    </tr>`;
+
+    /* ── Linhas de membros ── */
+    let rowsMembros = '';
+    for (let i = 0; i < maxMembros; i++) {
+      const cells = grupos.map(g => {
+        const nome = g.membros[i] || '';
+        return nome
+          ? `<td>${h(nome)}</td>`
+          : `<td class="vazio">—</td>`;
+      }).join('');
+      rowsMembros += `<tr class="row-membro">${cells}</tr>`;
+    }
+
+    el.innerHTML = `
+      <p style="text-align:center;font-size:13px;font-weight:700;color:#444;margin-bottom:14px;">
+        Total Geral de Publicadores = ${totalGeral}
+      </p>
+      <div class="grupos-table-wrapper">
+        <table class="grupos-table">
+          <thead>
+            ${rowNome}
+            ${rowDirigente}
+            ${rowAjudante}
+            ${rowLocal}
+            ${rowTotal}
+          </thead>
+          <tbody>
+            ${rowsMembros}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  async function loadGrupos() {
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true;
+    btn.textContent = 'Atualizando…';
+    try {
+      const res = await fetch('/api/grupos');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderGrupos(data);
+    } catch (e) {
+      document.getElementById('gruposContent').innerHTML =
+        `<div class="grupos-empty">Erro ao carregar: ${h(e.message)}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Atualizar';
+    }
+  }
+
+  loadGrupos();
+  </script>
+
+</body>
+</html>

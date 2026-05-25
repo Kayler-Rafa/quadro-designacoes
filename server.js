@@ -2,7 +2,9 @@ const express = require('express');
 const path = require('path');
 const db = require('./db');
 const gen = require('./generator');
-const rvm = require('./rvm-parser');
+const rvm    = require('./rvm-parser');
+const rfs    = require('./rfs-parser');
+const grupos = require('./grupos-parser');
 
 const app = express();
 app.use(express.json());
@@ -145,10 +147,28 @@ app.get('/api/health', async (req, res) => {
   res.json(info);
 });
 
+// GET reuniões de fim de semana (Google Sheets)
+app.get('/api/rfs', async (req, res) => {
+  try {
+    res.json(await rfs.getRFS());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET programação RVM (lê pasta /semanas)
 app.get('/api/rvm', (req, res) => {
   try {
     res.json(rvm.getAllSemanas());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET grupos de campo
+app.get('/api/grupos', async (req, res) => {
+  try {
+    res.json(await grupos.getGrupos());
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

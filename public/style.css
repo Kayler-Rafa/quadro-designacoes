@@ -17,8 +17,8 @@ body {
   display: flex;
   align-items: center;
   gap: 32px;
-  padding: 0 32px;
-  height: 54px;
+  padding: 0 24px;
+  height: 50px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 
