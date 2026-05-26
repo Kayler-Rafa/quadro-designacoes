@@ -78,6 +78,7 @@ function buildCapa(year, month) {
 /* ── Páginas RVM ── */
 function renderRvmWeek(s) {
   const canticos = s.canticos || [];
+
   const mkItem = (it) => {
     if (!it) return '';
     if (it.tipo === 'comentarios') {
@@ -98,6 +99,16 @@ function renderRvmWeek(s) {
       <span class="rvm-item-pessoa">${h(pessoa)}${salaB}</span>
     </div>`;
   };
+
+  const mkCantico = (texto, sub = '') => texto ? `
+    <div class="rvm-cantico-row">
+      ${h(texto)}
+      ${sub ? `<div class="rvm-cantico-sub">${h(sub)}</div>` : ''}
+    </div>` : '';
+
+  const mkComent = (texto) =>
+    `<div class="rvm-comentarios-row">${h(texto)}</div>`;
+
   return `
   <div class="rvm-week-card">
     <div class="rvm-week-header">
@@ -111,29 +122,32 @@ function renderRvmWeek(s) {
       </div>
       <div class="rvm-meta-cell">
         <span class="rvm-meta-label">Oração Inicial</span>${h(s.oracaoInicial||'—')}
-        <br><span class="rvm-meta-label" style="margin-top:4px">Oração Final</span>${h(s.oracaoFinal||'—')}
       </div>
     </div>
+
+    <div class="rvm-abertura">
+      <div class="rvm-block-header">Abertura</div>
+      ${mkCantico(canticos[0])}
+      ${mkComent('Comentários iniciais (1 min)')}
+    </div>
+
     <div class="rvm-tesouros">
-      <div class="rvm-block-header">Tesouros da Palavra de Deus
-        ${canticos[0] ? `<span class="cantico-badge">${h(canticos[0])}</span>` : ''}
-      </div>
+      <div class="rvm-block-header">Tesouros da Palavra de Deus</div>
       ${(s.tesouros||[]).map(mkItem).join('')}
     </div>
+
     <div class="rvm-escola">
-      <div class="rvm-block-header">Faça Seu Melhor no Ministério
-        ${canticos[1] ? `<span class="cantico-badge">${h(canticos[1])}</span>` : ''}
-      </div>
+      <div class="rvm-block-header">Faça Seu Melhor no Ministério</div>
       ${(s.escola||[]).map(mkItem).join('')}
     </div>
+
     <div class="rvm-vida">
-      <div class="rvm-block-header">Nossa Vida Cristã
-        ${canticos[2] ? `<span class="cantico-badge">${h(canticos[2])}</span>` : ''}
-      </div>
+      <div class="rvm-block-header">Nossa Vida Cristã</div>
+      ${mkCantico(canticos[1])}
       ${(s.vida||[]).map(mkItem).join('')}
+      ${mkCantico(canticos[2], s.oracaoFinal ? `Oração final: ${s.oracaoFinal}` : '')}
     </div>
   </div>`;
-}
 
 function buildPagesRVM(rvm, year, month) {
   if (!rvm.length) {
