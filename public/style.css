@@ -34,6 +34,7 @@ body {
   display: flex;
   list-style: none;
   gap: 4px;
+  flex: 1;
 }
 
 .nav-link {
