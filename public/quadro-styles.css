@@ -149,105 +149,147 @@
 .qa-table--sep tbody td + td { border-left: 1px solid #ddd; }
 
 /* ══════════════════════════════════════════════════════════
-   RVM
+   RVM — 1 semana por folha A4, expandido para preencher
 ══════════════════════════════════════════════════════════ */
-.rvm-wrap { padding: 10px 16px 20px; }
+.rvm-wrap {
+  padding: 14px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .rvm-week-card {
+  flex: 1;
   border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 6px rgba(0,0,0,.10);
+  box-shadow: 0 1px 8px rgba(0,0,0,.12);
+  display: flex;
+  flex-direction: column;
 }
+/* Cabeçalho da semana */
 .rvm-week-header {
   background: #111;
   color: #fff;
-  padding: 10px 14px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 6px;
 }
-.rvm-week-date { font-size: 15px; font-weight: 700; }
-.rvm-week-leit { font-size: 11px; opacity: .8; }
+.rvm-week-date { font-size: 20px; font-weight: 700; }
+.rvm-week-leit { font-size: 13px; opacity: .8; }
+/* Meta (presidente / ajudante) */
 .rvm-week-meta {
   background: #f8f8f8;
   border-bottom: 1px solid #e0e0e0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  font-size: 11px;
+  font-size: 13px;
 }
 .rvm-meta-cell {
-  padding: 7px 12px;
+  padding: 12px 16px;
   border-right: 1px solid #e0e0e0;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 .rvm-meta-cell:last-child { border-right: none; }
 .rvm-meta-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   color: #888;
   display: block;
-  letter-spacing: .3px;
+  letter-spacing: .4px;
 }
+/* Cabeçalhos de bloco */
 .rvm-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 12px;
-  font-size: 11px;
+  padding: 11px 16px;
+  font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .5px;
-}
-.rvm-block-header .cantico-badge {
-  font-size: 10px; font-weight: 600; opacity: .9;
-  text-transform: none; letter-spacing: 0;
 }
 .rvm-abertura .rvm-block-header { background: #2c2c2c; color: #fff; }
 .rvm-tesouros .rvm-block-header { background: #154360; color: #fff; }
 .rvm-escola   .rvm-block-header { background: #d4ac0d; color: #1a1a1a; }
 .rvm-vida     .rvm-block-header { background: #7b241c; color: #fff; }
+/* Vida estica para preencher o espaço restante */
+.rvm-vida { flex: 1; display: flex; flex-direction: column; }
 /* Linha de cântico */
 .rvm-cantico-row {
   background: #f7f3e7;
   color: #5a3e00;
   font-weight: 600;
-  font-size: 11px;
-  padding: 5px 12px;
+  font-size: 13px;
+  padding: 10px 16px;
   border-bottom: 1px solid #ede8d8;
 }
 .rvm-cantico-sub {
   font-weight: 400;
   font-style: italic;
   color: #888;
-  font-size: 10px;
-  margin-top: 1px;
+  font-size: 11px;
+  margin-top: 2px;
 }
-/* Linha de comentários/encerramento */
+/* Linha de oração */
+.rvm-oracao-row {
+  background: #eef3ff;
+  color: #1a3a80;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-bottom: 1px solid #d8e4f8;
+}
+.rvm-oracao-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #6080cc;
+  display: block;
+  margin-bottom: 2px;
+}
+/* Linha de comentários */
 .rvm-comentarios-row {
   background: #f9f9f9;
   color: #777;
   font-style: italic;
-  font-size: 10.5px;
-  padding: 4px 12px;
+  font-size: 12px;
+  padding: 9px 16px;
   border-bottom: 1px solid #f0f0f0;
 }
+/* Itens */
 .rvm-item {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 5px 12px;
+  padding: 10px 16px;
   border-bottom: 1px solid #f0f0f0;
-  font-size: 11px;
-  gap: 8px;
+  font-size: 13px;
+  gap: 10px;
 }
 .rvm-item:last-child { border-bottom: none; }
-.rvm-item-titulo { flex: 1; color: #444; line-height: 1.4; }
+.rvm-item-titulo { flex: 1; color: #444; line-height: 1.5; }
 .rvm-item-pessoa { font-weight: 700; white-space: nowrap; }
-.rvm-item-sala   { font-size: 10px; color: #888; }
 .rvm-item-comentarios .rvm-item-titulo { color: #999; font-style: italic; }
+/* Item com duas salas */
+.rvm-item-salas { align-items: flex-start; }
+.rvm-salas-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
+}
+.rvm-sala-bloco { display: flex; flex-direction: column; }
+.rvm-sala-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #999;
+}
 
 /* ══════════════════════════════════════════════════════════
    MAPA

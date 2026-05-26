@@ -79,7 +79,9 @@ function buildCapa(year, month) {
 function renderRvmWeek(s) {
   const canticos = s.canticos || [];
 
-  const mkItem = (it) => {
+  const isLeitura = (titulo) => /leitura da b[íi]blia/i.test(titulo);
+
+  const mkItem = (it, forceSingle = false, forceSala = false) => {
     if (!it) return '';
     if (it.tipo === 'comentarios') {
       return `<div class="rvm-item rvm-item-comentarios">
@@ -92,11 +94,25 @@ function renderRvmWeek(s) {
         <span class="rvm-item-pessoa">${h(it.dirigente)} / ${h(it.leitor)}</span>
       </div>`;
     }
-    const salaB = it.salaB ? `<br><span class="rvm-item-sala">Sala B: ${h(it.salaB)}</span>` : '';
     const pessoa = it.salaA || it.pessoa || '—';
+    if ((it.salaA || forceSala) && !forceSingle) {
+      return `<div class="rvm-item rvm-item-salas">
+        <span class="rvm-item-titulo">${h(it.titulo)}</span>
+        <div class="rvm-salas-grid">
+          <div class="rvm-sala-bloco">
+            <span class="rvm-sala-label">Salão Principal</span>
+            <span class="rvm-item-pessoa">${h(pessoa)}</span>
+          </div>
+          <div class="rvm-sala-bloco">
+            <span class="rvm-sala-label">Sala B</span>
+            <span class="rvm-item-pessoa">${h(it.salaB||'—')}</span>
+          </div>
+        </div>
+      </div>`;
+    }
     return `<div class="rvm-item">
       <span class="rvm-item-titulo">${h(it.titulo)}</span>
-      <span class="rvm-item-pessoa">${h(pessoa)}${salaB}</span>
+      <span class="rvm-item-pessoa">${h(pessoa)}</span>
     </div>`;
   };
 
@@ -118,34 +134,35 @@ function renderRvmWeek(s) {
     <div class="rvm-week-meta">
       <div class="rvm-meta-cell">
         <span class="rvm-meta-label">Presidente</span>${h(s.presidente||'—')}
-        <br><span class="rvm-meta-label" style="margin-top:4px">Ajudante</span>${h(s.ajudante||'—')}
       </div>
       <div class="rvm-meta-cell">
-        <span class="rvm-meta-label">Oração Inicial</span>${h(s.oracaoInicial||'—')}
+        <span class="rvm-meta-label">Ajudante</span>${h(s.ajudante||'—')}
       </div>
     </div>
 
     <div class="rvm-abertura">
       <div class="rvm-block-header">Abertura</div>
       ${mkCantico(canticos[0])}
+      ${s.oracaoInicial ? `<div class="rvm-oracao-row"><span class="rvm-oracao-label">Oração Inicial</span>${h(s.oracaoInicial)}</div>` : ''}
       ${mkComent('Comentários iniciais (1 min)')}
     </div>
 
     <div class="rvm-tesouros">
       <div class="rvm-block-header">Tesouros da Palavra de Deus</div>
-      ${(s.tesouros||[]).map(mkItem).join('')}
+      ${(s.tesouros||[]).map(it => mkItem(it, !isLeitura(it.titulo||''))).join('')}
     </div>
 
     <div class="rvm-escola">
       <div class="rvm-block-header">Faça Seu Melhor no Ministério</div>
-      ${(s.escola||[]).map(mkItem).join('')}
+      ${(s.escola||[]).map(it => mkItem(it, false, true)).join('')}
     </div>
 
     <div class="rvm-vida">
       <div class="rvm-block-header">Nossa Vida Cristã</div>
       ${mkCantico(canticos[1])}
       ${(s.vida||[]).map(mkItem).join('')}
-      ${mkCantico(canticos[2], s.oracaoFinal ? `Oração final: ${s.oracaoFinal}` : '')}
+      ${mkCantico(canticos[2])}
+      ${s.oracaoFinal ? `<div class="rvm-oracao-row"><span class="rvm-oracao-label">Oração Final</span>${h(s.oracaoFinal)}</div>` : ''}
     </div>
   </div>`;
 }
@@ -158,12 +175,11 @@ function buildPagesRVM(rvm, year, month) {
     </div>`;
   }
   const pages = [];
-  for (let i = 0; i < rvm.length; i += 2) {
-    const chunk = rvm.slice(i, i + 2);
+  for (let i = 0; i < rvm.length; i++) {
     pages.push(`
       <div class="a4-page">
         <div class="qa-page-title">Programação da Reunião de Meio de Semana</div>
-        <div class="a4-fill"><div class="rvm-wrap">${chunk.map(renderRvmWeek).join('')}</div></div>
+        <div class="a4-fill"><div class="rvm-wrap">${renderRvmWeek(rvm[i])}</div></div>
       </div>`);
   }
   return pages.join('');
