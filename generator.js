@@ -158,7 +158,20 @@ function generateDay(date, history, people, audioIndex, limpeza) {
   };
 }
 
-function getAvailablePeople(pool, role, date, history, currentAssignment) {
+// Verifica se a pessoa está designada nas próximas reuniões (futuro)
+// Retorna o índice da próxima ocorrência (0 = próxima reunião, 1 = daqui a 2, etc.)
+// ou -1 se não aparecer
+function getNextAssignmentIdx(person, role, future) {
+  for (let i = 0; i < future.length; i++) {
+    const m = future[i];
+    if (role === 'indicador' && (m.indicador_externo === person || m.indicador_interno === person)) return i;
+    if (role === 'volante'   && (m.volante1 === person || m.volante2 === person))                   return i;
+    if (role === 'audio'     && m.audio === person)                                                  return i;
+  }
+  return -1;
+}
+
+function getAvailablePeople(pool, role, date, history, currentAssignment, futureAssignments) {
   const otherRoles = ['indicador_externo', 'indicador_interno', 'volante1', 'volante2', 'audio'];
   const assignedElsewhere = new Set();
   if (currentAssignment) {
@@ -167,14 +180,24 @@ function getAvailablePeople(pool, role, date, history, currentAssignment) {
     }
   }
 
+  // Próximas COOLDOWN reuniões após a data atual (ordenadas)
+  const upcoming = (futureAssignments || [])
+    .filter(a => a.date > date)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, COOLDOWN);
+
   return pool.map(p => {
-    const lastIdx = getLastAssignmentIdx(p, role, history);
-    const onCooldown = lastIdx !== -1 && lastIdx < COOLDOWN;
-    const blocked = assignedElsewhere.has(p);
-    return { name: p, lastIdx, onCooldown, blocked };
+    const lastIdx  = getLastAssignmentIdx(p, role, history);
+    const nextIdx  = getNextAssignmentIdx(p, role, upcoming);
+    const onCooldown     = lastIdx !== -1 && lastIdx < COOLDOWN;
+    const scheduledAhead = nextIdx !== -1;               // designado nas próx. COOLDOWN reuniões
+    const blocked        = assignedElsewhere.has(p);
+    return { name: p, lastIdx, onCooldown, nextIdx, scheduledAhead, blocked };
   }).sort((a, b) => {
-    if (a.blocked !== b.blocked) return a.blocked ? 1 : -1;
-    if (a.onCooldown !== b.onCooldown) return a.onCooldown ? 1 : -1;
+    // Ordem: livre → designado à frente → em cooldown → bloqueado
+    if (a.blocked  !== b.blocked)        return a.blocked  ? 1 : -1;
+    if (a.onCooldown !== b.onCooldown)   return a.onCooldown ? 1 : -1;
+    if (a.scheduledAhead !== b.scheduledAhead) return a.scheduledAhead ? 1 : -1;
     if (a.lastIdx === -1 && b.lastIdx === -1) return 0;
     if (a.lastIdx === -1) return -1;
     if (b.lastIdx === -1) return 1;

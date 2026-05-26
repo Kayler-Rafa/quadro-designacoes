@@ -111,10 +111,12 @@ app.get('/api/available/:date/:role', async (req, res) => {
     const mapping = poolMap[role];
     if (!mapping) return res.status(400).json({ error: 'Unknown role' });
 
-    const history = (await db.getAllAssignments()).filter(a => a.date < date);
+    const all = await db.getAllAssignments();
+    const history           = all.filter(a => a.date < date);
+    const futureAssignments = all.filter(a => a.date > date);
     const currentAssignment = await db.getAssignment(date);
 
-    res.json(gen.getAvailablePeople(mapping.pool, mapping.role, date, history, currentAssignment));
+    res.json(gen.getAvailablePeople(mapping.pool, mapping.role, date, history, currentAssignment, futureAssignments));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

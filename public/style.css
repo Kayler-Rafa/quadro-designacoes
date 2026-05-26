@@ -277,6 +277,10 @@ body {
 .badge-ok    { background: #d4f7d4; color: #1a7a1a; }
 .badge-cool  { background: #ffefc0; color: #a06000; }
 .badge-block { background: #ffe0e0; color: #b00; }
+.badge-ahead { background: #dceeff; color: #0050a0; }
+
+.picker-item.scheduled-ahead { color: #0050a0; }
+.picker-item.scheduled-ahead:hover { background: #eaf4ff; }
 
 .picker-divider {
   font-size: 11px;

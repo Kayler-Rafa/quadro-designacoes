@@ -80,10 +80,12 @@ async function openPicker(date, role, assignmentId) {
   const body = document.getElementById('modalBody');
   body.innerHTML = '';
 
-  let shownCoolDiv = false;
+  let shownAheadDiv = false;
+  let shownCoolDiv  = false;
   let shownBlockDiv = false;
 
   people.forEach(p => {
+    // ── Separadores de seção ──────────────────────────────
     if (p.blocked && !shownBlockDiv) {
       shownBlockDiv = true;
       const div = document.createElement('div');
@@ -94,32 +96,47 @@ async function openPicker(date, role, assignmentId) {
       shownCoolDiv = true;
       const div = document.createElement('div');
       div.className = 'picker-divider';
-      div.textContent = 'Em intervalo';
+      div.textContent = 'Em intervalo (usou recentemente)';
+      body.appendChild(div);
+    } else if (p.scheduledAhead && !p.onCooldown && !p.blocked && !shownAheadDiv) {
+      shownAheadDiv = true;
+      const div = document.createElement('div');
+      div.className = 'picker-divider';
+      div.textContent = 'Já designado nas próximas reuniões';
       body.appendChild(div);
     }
 
+    // ── Item ─────────────────────────────────────────────
     const item = document.createElement('div');
     item.className = 'picker-item' +
-      (p.name === currentValue ? ' selected' : '') +
+      (p.name === currentValue    ? ' selected'    : '') +
+      (p.blocked                  ? ' blocked'     : '') +
       (p.onCooldown && !p.blocked ? ' on-cooldown' : '') +
-      (p.blocked ? ' blocked' : '');
+      (p.scheduledAhead && !p.onCooldown && !p.blocked ? ' scheduled-ahead' : '');
 
     const nameSpan = document.createElement('span');
     nameSpan.textContent = p.name;
 
     const badge = document.createElement('span');
     badge.className = 'picker-badge';
+
     if (p.blocked) {
       badge.textContent = 'outro serviço';
       badge.classList.add('badge-block');
     } else if (p.onCooldown) {
-      badge.textContent = `${p.lastIdx + 1} reunião(ões) atrás`;
+      // Mostra tanto passado quanto futuro se ambos existirem
+      let txt = `↩ ${p.lastIdx + 1} atrás`;
+      if (p.scheduledAhead) txt += `  ·  ↪ ${p.nextIdx + 1} à frente`;
+      badge.textContent = txt;
       badge.classList.add('badge-cool');
+    } else if (p.scheduledAhead) {
+      badge.textContent = `↪ ${p.nextIdx + 1} reunião(ões) à frente`;
+      badge.classList.add('badge-ahead');
     } else if (p.lastIdx === -1) {
       badge.textContent = 'nunca designado';
       badge.classList.add('badge-ok');
     } else {
-      badge.textContent = `${p.lastIdx + 1} reunião(ões) atrás`;
+      badge.textContent = `↩ ${p.lastIdx + 1} reunião(ões) atrás`;
       badge.classList.add('badge-ok');
     }
 
