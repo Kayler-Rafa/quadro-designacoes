@@ -11,6 +11,11 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/mapa', express.static(path.join(__dirname, 'mapa')));
 
+// Rota limpa para a página de designações
+app.get('/designacoes', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'designacoes.html'));
+});
+
 // Mechanical preset for June 1, 2026 (audio_index=2 → Rafael Diniz used, next=Kauã=3)
 const JUNE1_PRESET = {
   date: '2026-06-01',

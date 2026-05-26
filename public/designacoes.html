@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quadro de Designações</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <ul class="navbar-links" id="navLinks">
+      <li><a href="/designacoes" class="nav-link active" data-section="mecanicas">Designações</a></li>
+      <li><a href="/rvm.html" class="nav-link" data-section="rvm">RVM</a></li>
+      <li><a href="/rfs.html" class="nav-link" data-section="rfs">RFS</a></li>
+      <li><a href="/grupos.html" class="nav-link" data-section="grupos">Grupos</a></li>
+      <li><a href="/quadro.html" class="nav-link" data-section="quadro">Quadro</a></li>
+      <li style="margin-left: auto"><a href="/mapa.html" class="nav-link">Mapa</a></li>
+    </ul>
+  </nav>
+
+  <div class="app">
+
+    <!-- Month navigation -->
+    <div class="month-nav">
+      <button class="nav-btn" id="prevMonth">&#8592;</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button class="nav-btn" id="nextMonth">&#8594;</button>
+    </div>
+
+    <!-- Mechanical Assignments -->
+    <section class="section" id="mecanicas">
+      <div class="section-header">
+        <h1 class="section-title">Designações Mecânicas</h1>
+        <button class="generate-btn" id="generateBtn">Gerar Mês</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="assignments-table" id="mechanicalTable">
+          <thead>
+            <tr>
+              <th class="col-data">Data</th>
+              <th class="col-ind">Indicador<br>Externo</th>
+              <th class="col-ind">Indicador<br>Interno</th>
+              <th class="col-vol" colspan="2">Microfone Volante</th>
+              <th class="col-av">Áudio/Vídeo</th>
+            </tr>
+          </thead>
+          <tbody id="mechanicalBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Cleaning Assignments -->
+    <section class="section" id="limpeza">
+      <div class="section-header">
+        <h1 class="section-title">Limpeza do Salão</h1>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="assignments-table clean-table" id="cleanTable">
+          <thead>
+            <tr>
+              <th class="col-data">Data</th>
+              <th>Grupos Responsáveis</th>
+            </tr>
+          </thead>
+          <tbody id="cleanBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Picker Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span id="modalTitle">Escolher pessoa</span>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
