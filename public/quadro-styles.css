@@ -356,4 +356,23 @@
     break-after: avoid;
   }
   @page { size: A4; margin: 0; }
+
+  /* Compacta RVM para caber em 297mm */
+  .qa-page-title        { padding: 10px 16px 0; font-size: 14px; }
+  .rvm-wrap             { padding: 8px 14px 12px; }
+  .rvm-week-header      { padding: 10px 16px; }
+  .rvm-week-date        { font-size: 17px; }
+  .rvm-week-leit        { font-size: 11px; }
+  .rvm-meta-cell        { padding: 7px 14px; font-size: 12px; }
+  .rvm-block-header     { padding: 7px 14px; font-size: 11px; }
+  .rvm-cantico-row      { padding: 6px 14px; font-size: 12px; }
+  .rvm-cantico-sub      { font-size: 10px; }
+  .rvm-oracao-row       { padding: 6px 14px; font-size: 12px; }
+  .rvm-oracao-label     { font-size: 9px; }
+  .rvm-comentarios-row  { padding: 5px 14px; font-size: 11px; }
+  .rvm-item             { padding: 6px 14px; font-size: 12px; }
+  .rvm-item-titulo      { font-size: 11px; }
+  .rvm-item-pessoa      { font-size: 11px; }
+  .rvm-salas-grid       { gap: 3px; }
+  .rvm-sala-label       { font-size: 8px; }
 }
