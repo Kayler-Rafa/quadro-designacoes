@@ -148,6 +148,7 @@ function renderRvmWeek(s) {
       ${mkCantico(canticos[2], s.oracaoFinal ? `Oração final: ${s.oracaoFinal}` : '')}
     </div>
   </div>`;
+}
 
 function buildPagesRVM(rvm, year, month) {
   if (!rvm.length) {
