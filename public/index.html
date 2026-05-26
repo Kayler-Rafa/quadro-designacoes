@@ -27,6 +27,59 @@
       font-size: 14px;
       font-family: Arial, Helvetica, sans-serif;
     }
+
+    /* ── Mobile: sem simulação A4, tudo flui como cards ── */
+    @media (max-width: 640px) {
+      body { padding: 10px 8px 32px; }
+
+      /* Páginas viram cards sem altura mínima */
+      .a4-page {
+        min-height: unset;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 10px rgba(0,0,0,.4);
+        font-size: 13px;
+      }
+
+      /* Capa compacta */
+      .capa-left  { padding: 28px 22px; gap: 20px; }
+      .capa-titulo { font-size: 34px; letter-spacing: 1px; }
+      .capa-cong   { font-size: 13px; }
+      .capa-lista  { font-size: 13px; line-height: 2; padding-top: 14px; }
+      .capa-mes    { font-size: 13px; }
+      .capa-right  { width: 44px; padding: 12px 6px; }
+
+      /* Título de página */
+      .qa-page-title { font-size: 13px; padding: 10px 14px 0; }
+
+      /* Sub-seções */
+      .qa-section-label { font-size: 11px; padding: 5px 12px; }
+
+      /* Tabelas: scroll horizontal */
+      .qa-table-wrap { padding: 8px 10px 12px; overflow-x: auto; }
+      .qa-table { font-size: 12px; min-width: 440px; }
+      .qa-table thead th { font-size: 10px; padding: 6px 6px; }
+      .qa-table tbody td { padding: 6px 6px; }
+      .qa-table .td-date { padding-left: 8px; }
+
+      /* RVM */
+      .rvm-wrap { padding: 8px 10px 12px; }
+      .rvm-week-card { margin-bottom: 12px; }
+      .rvm-week-header { padding: 8px 12px; }
+      .rvm-week-date { font-size: 13px; }
+      .rvm-week-leit { font-size: 10px; }
+      .rvm-meta-cell { padding: 6px 10px; }
+      .rvm-item { padding: 4px 10px; font-size: 11px; }
+      .rvm-block-header { padding: 6px 10px; font-size: 10px; }
+
+      /* Grupos: scroll horizontal */
+      .grupos-wrap { padding: 8px 10px 12px; }
+      .grupos-table { font-size: 10px; }
+      .grupos-table .gh { font-size: 10px; padding: 5px 3px; }
+      .grupos-table th, .grupos-table td { padding: 3px 4px; }
+
+      /* Mapa */
+      .mapa-wrap { padding: 8px 10px; }
+    }
   </style>
 </head>
 <body>
