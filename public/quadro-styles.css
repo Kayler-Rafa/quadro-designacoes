@@ -341,11 +341,19 @@
 ══════════════════════════════════════════════════════════ */
 @media print {
   .a4-page {
-    width: 100%;
+    width: 210mm;
+    height: 297mm;
+    min-height: unset;
+    max-height: 297mm;
+    overflow: hidden;
     box-shadow: none;
     margin: 0;
     page-break-after: always;
+    break-after: page;
   }
-  .a4-page:last-child { page-break-after: avoid; }
-  @page { size: A4; margin: 0.8cm; }
+  .a4-page:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  @page { size: A4; margin: 0; }
 }
