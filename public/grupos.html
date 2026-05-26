@@ -79,17 +79,22 @@
     .grupos-table .row-membro td {
       padding: 6px 10px;
       font-size: 13px;
+      font-weight: 700;            /* nomes em negrito */
       text-align: center;
-      border: 1px solid #e8e8e8;
+      border: 1px solid #bbb;      /* bordas mais destacadas */
       color: #222;
       white-space: nowrap;
     }
-    .grupos-table .row-membro:nth-child(even) td { background: #f7f7f7; }
+    .grupos-table .row-membro:nth-child(even) td { background: #f5f5f5; }
     .grupos-table .row-membro:nth-child(odd)  td { background: #fff; }
     .grupos-table .row-membro:hover td { background: #eaf2ff; }
 
+    /* Borda vertical entre colunas ainda mais visível */
+    .grupos-table td + td,
+    .grupos-table th + th { border-left: 2px solid #999; }
+
     /* Célula vazia */
-    .grupos-table .row-membro td.vazio { color: #ddd; }
+    .grupos-table .row-membro td.vazio { color: #ccc; font-weight: 400; }
 
     /* ══════════════════════════════════════════════════════
        CORES POR GRUPO  (aplicadas via atributo data-col)
