@@ -79,6 +79,9 @@ function buildCapa(year, month) {
 function renderRvmWeek(s) {
   const canticos = s.canticos || [];
 
+  // ── Sala B: mude para true quando quiser reativar o grid de salas ──
+  const SHOW_SALA_B = false;
+
   const isLeitura = (titulo) => /leitura da b[íi]blia/i.test(titulo);
 
   const mkItem = (it, forceSingle = false, forceSala = false) => {
@@ -95,7 +98,7 @@ function renderRvmWeek(s) {
       </div>`;
     }
     const pessoa = it.salaA || it.pessoa || '—';
-    if ((it.salaA || forceSala) && !forceSingle) {
+    if (SHOW_SALA_B && (it.salaA || forceSala) && !forceSingle) {
       return `<div class="rvm-item rvm-item-salas">
         <span class="rvm-item-titulo">${h(it.titulo)}</span>
         <div class="rvm-salas-grid">
@@ -154,13 +157,13 @@ function renderRvmWeek(s) {
 
     <div class="rvm-escola">
       <div class="rvm-block-header">Faça Seu Melhor no Ministério</div>
-      ${(s.escola||[]).map(it => mkItem(it, false, true)).join('')}
+      ${(s.escola||[]).map(it => mkItem(it, true)).join('')}
     </div>
 
     <div class="rvm-vida">
       <div class="rvm-block-header">Nossa Vida Cristã</div>
       ${mkCantico(canticos[1])}
-      ${(s.vida||[]).map(mkItem).join('')}
+      ${(s.vida||[]).map(it => mkItem(it, true)).join('')}
       ${mkCantico(canticos[2])}
       ${s.oracaoFinal ? `<div class="rvm-oracao-row"><span class="rvm-oracao-label">Oração Final</span>${h(s.oracaoFinal)}</div>` : ''}
     </div>
