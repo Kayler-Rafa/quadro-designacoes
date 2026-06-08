@@ -6,12 +6,35 @@
   <title>RFS — Reunião de Fim de Semana</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* ── Cores de linha por tipo ── */
+    /* ── Tab nav ── */
+    .tabs-nav {
+      display: flex;
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 10px 26px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #666;
+      margin-bottom: -2px;
+      transition: color .15s;
+    }
+    .tab-btn:hover { color: #111; }
+    .tab-btn.active { color: #111; border-bottom-color: #111; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Cores de linha por tipo (aba Reuniões) ── */
     .rfs-row.especial   td.cell-data { border-left: 4px solid #1a4f8a; }
     .rfs-row.assembleia td.cell-data { border-left: 4px solid #7a4800; }
     .rfs-row.congresso  td.cell-data { border-left: 4px solid #4a1a7a; }
 
-    /* ── Badge de tipo especial ── */
+    /* ── Badge de tipo ── */
     .tipo-badge {
       display: inline-block;
       font-size: 10px;
@@ -27,32 +50,26 @@
     .tipo-badge.assembleia { background: #f7e4c0; color: #7a4800; }
     .tipo-badge.congresso  { background: #e8d0f7; color: #4a1a7a; }
 
-    /* ── Coluna Orador: nome + congregação ── */
+    /* ── Orador ── */
     .orador-nome { font-weight: 600; font-size: 14px; }
     .orador-cong { font-size: 12px; color: #888; }
+    .tema-vazio  { color: #bbb; font-style: italic; font-weight: 400; }
 
-    /* ── Tema: itálico quando vazio ── */
-    .tema-vazio { color: #bbb; font-style: italic; font-weight: 400; }
+    /* ── Colunas tabela Reuniões ── */
+    .col-data-rfs { width: 90px; }
+    .col-orador   { width: 170px; }
+    .col-pres     { width: 150px; }
 
-    /* ── Colunas ── */
-    .col-data-rfs  { width: 90px; }
-    .col-tema      { /* flex */ }
-    .col-orador    { width: 170px; }
-    .col-pres      { width: 150px; }
+    /* ── Leitura: coluna data ── */
+    .col-leit-data { width: 90px; }
 
-    /* ════════════════════════════════════════
-       MOBILE — cards (igual à tabela mecânica)
-    ════════════════════════════════════════ */
+    /* ── Mobile Reuniões ── */
     @media (max-width: 640px) {
       #rfsTable,
       #rfsTable tbody,
       #rfsTable tr,
-      #rfsTable td {
-        display: block;
-        width: 100%;
-      }
+      #rfsTable td { display: block; width: 100%; }
       #rfsTable thead { display: none; }
-
       #rfsTable tbody tr {
         background: #fff !important;
         border-radius: 8px;
@@ -61,54 +78,67 @@
         overflow: hidden;
       }
       #rfsTable tbody tr:hover { background: #fff !important; }
-
       #rfsTable tbody td.cell-data {
-        background: #111;
-        color: #fff;
-        font-size: 15px;
-        font-weight: 700;
-        text-align: left;
-        padding: 10px 14px;
-        border-bottom: none;
-        border-left: none !important;
+        background: #111; color: #fff;
+        font-size: 15px; font-weight: 700;
+        text-align: left; padding: 10px 14px;
+        border-bottom: none; border-left: none !important;
       }
       #rfsTable tbody td.cell-data::before { display: none; }
-
-      /* Badge de tipo dentro do card mobile */
-      #rfsTable tbody td.cell-data .tipo-badge.especial   { background: rgba(255,255,255,.2); color: #fff; }
-      #rfsTable tbody td.cell-data .tipo-badge.assembleia { background: rgba(255,255,255,.2); color: #fff; }
-      #rfsTable tbody td.cell-data .tipo-badge.congresso  { background: rgba(255,255,255,.2); color: #fff; }
-
+      #rfsTable tbody td.cell-data .tipo-badge { background: rgba(255,255,255,.2); color: #fff; }
       #rfsTable tbody td {
-        display: flex;
-        align-items: flex-start;
+        display: flex; align-items: flex-start;
         justify-content: space-between;
-        padding: 10px 14px;
-        font-size: 13px;
-        text-align: right;
-        border-bottom: 1px solid #f0f0f0;
+        padding: 10px 14px; font-size: 13px;
+        text-align: right; border-bottom: 1px solid #f0f0f0;
       }
       #rfsTable tbody td:last-child { border-bottom: none; }
       #rfsTable tbody td::before {
         content: attr(data-label);
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .4px;
-        color: #888;
-        text-align: left;
-        flex-shrink: 0;
-        margin-right: 10px;
-        padding-top: 2px;
+        font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .4px;
+        color: #888; text-align: left;
+        flex-shrink: 0; margin-right: 10px; padding-top: 2px;
       }
       #rfsTable .orador-nome { text-align: right; }
       #rfsTable .orador-cong { text-align: right; }
+
+      /* Leitura mobile */
+      #leituraTable,
+      #leituraTable tbody,
+      #leituraTable tr,
+      #leituraTable td { display: block; width: 100%; }
+      #leituraTable thead { display: none; }
+      #leituraTable tbody tr {
+        background: #fff !important;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,.10);
+        margin-bottom: 14px; overflow: hidden;
+      }
+      #leituraTable tbody td.cell-data {
+        background: #111; color: #fff;
+        font-size: 15px; font-weight: 700;
+        text-align: left; padding: 10px 14px; border-bottom: none;
+      }
+      #leituraTable tbody td.cell-data::before { display: none; }
+      #leituraTable tbody td {
+        display: flex; align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px; font-size: 13px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      #leituraTable tbody td:last-child { border-bottom: none; }
+      #leituraTable tbody td::before {
+        content: attr(data-label);
+        font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .4px;
+        color: #888; flex-shrink: 0; margin-right: 10px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
   <nav class="navbar">
     <ul class="navbar-links">
       <li><a href="/designacoes" class="nav-link">Designações</a></li>
@@ -122,98 +152,167 @@
 
   <div class="app">
 
-    <!-- Month navigation -->
     <div class="month-nav">
       <button class="nav-btn" id="prevMonth">&#8592;</button>
       <span class="month-label" id="monthLabel">…</span>
       <button class="nav-btn" id="nextMonth">&#8594;</button>
     </div>
 
-    <!-- Seção -->
-    <section class="section">
-      <div class="section-header">
-        <h1 class="section-title">Reunião de Fim de Semana</h1>
-        <button class="generate-btn" id="refreshBtn">Atualizar</button>
-      </div>
+    <div class="tabs-nav">
+      <button class="tab-btn active" data-tab="reunioes">Reuniões</button>
+      <button class="tab-btn" data-tab="leitura">Leitura</button>
+    </div>
 
-      <div class="table-wrapper">
-        <table class="assignments-table" id="rfsTable">
-          <thead>
-            <tr>
-              <th class="col-data-rfs">Data</th>
-              <th class="col-tema">Tema</th>
-              <th class="col-orador">Orador<br>(Congregação)</th>
-              <th class="col-pres">Presidente</th>
-            </tr>
-          </thead>
-          <tbody id="rfsBody">
-            <tr><td colspan="4" style="text-align:center;padding:40px;color:#aaa;">Carregando…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <!-- Tab: Reuniões -->
+    <div id="tab-reunioes" class="tab-content active">
+      <section class="section">
+        <div class="section-header">
+          <h1 class="section-title">Reunião de Fim de Semana</h1>
+          <button class="generate-btn" id="refreshBtn">Atualizar</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="assignments-table" id="rfsTable">
+            <thead>
+              <tr>
+                <th class="col-data-rfs" style="text-align:left;padding-left:16px">Data</th>
+                <th style="text-align:left">Tema</th>
+                <th class="col-orador">Orador<br>(Congregação)</th>
+                <th class="col-pres">Presidente</th>
+              </tr>
+            </thead>
+            <tbody id="rfsBody">
+              <tr><td colspan="4" style="text-align:center;padding:40px;color:#aaa">Carregando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
 
+    <!-- Tab: Leitura -->
+    <div id="tab-leitura" class="tab-content">
+      <section class="section">
+        <div class="section-header">
+          <h1 class="section-title">Leitura — Fim de Semana</h1>
+          <button class="generate-btn" id="leituraGenBtn">Gerar Mês</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="assignments-table" id="leituraTable">
+            <thead>
+              <tr>
+                <th class="col-leit-data" style="text-align:left;padding-left:16px">Data</th>
+                <th>Leitura</th>
+              </tr>
+            </thead>
+            <tbody id="leituraBody">
+              <tr><td colspan="2" class="empty-state">Selecione o mês e clique em Gerar Mês.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- Modal picker (leitura) -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span id="modalTitle">Escolher pessoa</span>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
   </div>
 
   <script>
   /* ══════════════════════════════════════════════════════════
-     CONSTANTES
+     CONSTANTES / UTILITÁRIOS
   ══════════════════════════════════════════════════════════ */
   const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const MESES_ABREV = ['jan','fev','mar','abr','mai','jun',
                        'jul','ago','set','out','nov','dez'];
-
-  const TIPO_LABEL = {
-    especial:   'Especial',
-    assembleia: 'Assembleia',
-    congresso:  'Congresso',
-  };
+  const TIPO_LABEL = { especial: 'Especial', assembleia: 'Assembleia', congresso: 'Congresso' };
 
   const h = s => String(s ?? '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-  /* ══════════════════════════════════════════════════════════
-     ESTADO
-  ══════════════════════════════════════════════════════════ */
-  let allReunioes = [];   // array completo da API
-  let monthKeys   = [];   // keys únicas "YYYY-MM" ordenadas
-  let curIdx      = 0;    // índice atual em monthKeys
+  function monthKey(iso)   { return iso.slice(0, 7); }
+  function dayOf(iso)      { return parseInt(iso.slice(8, 10)); }
+  function monthOf(iso)    { return parseInt(iso.slice(5, 7)); }
 
-  /* ══════════════════════════════════════════════════════════
-     UTILITÁRIOS DE DATA
-  ══════════════════════════════════════════════════════════ */
-  function monthKey(isoDate)  { return isoDate.slice(0, 7); }
-  function yearOf(isoDate)    { return parseInt(isoDate.slice(0, 4)); }
-  function monthOf(isoDate)   { return parseInt(isoDate.slice(5, 7)); }
-  function dayOf(isoDate)     { return parseInt(isoDate.slice(8, 10)); }
-
-  // "2026-06-07" → "7-jun."
-  function formatDateShort(isoDate) {
-    const d = dayOf(isoDate);
-    const m = monthOf(isoDate) - 1;
-    return `${d}-${MESES_ABREV[m]}.`;
+  function formatDateShort(iso) {
+    return `${dayOf(iso)}-${MESES_ABREV[monthOf(iso) - 1]}.`;
   }
-
-  // "2026-06" → "Junho 2026"
   function labelFromKey(key) {
     const [y, m] = key.split('-');
     return `${MESES[parseInt(m) - 1]} ${y}`;
   }
+  function keyToYM(key) {
+    const [y, m] = key.split('-');
+    return { year: parseInt(y), month: parseInt(m) };
+  }
 
   /* ══════════════════════════════════════════════════════════
-     RENDER DA TABELA DO MÊS ATUAL
+     ESTADO GLOBAL
   ══════════════════════════════════════════════════════════ */
-  function renderMonth() {
-    const key    = monthKeys[curIdx];
-    const lista  = allReunioes.filter(r => monthKey(r.date) === key);
-    const tbody  = document.getElementById('rfsBody');
+  let allReunioes = [];
+  let monthKeys   = [];
+  let curIdx      = 0;
+  let activeTab   = 'reunioes';
 
-    // Atualiza label e botões
-    document.getElementById('monthLabel').textContent = labelFromKey(key);
+  let leituraData     = [];
+  let pickerCtx       = null; // { id, date }
+
+  /* ══════════════════════════════════════════════════════════
+     TABS
+  ══════════════════════════════════════════════════════════ */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+  });
+
+  function setActiveTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.tab-content').forEach(c =>
+      c.classList.toggle('active', c.id === 'tab-' + tab));
+    if (tab === 'leitura' && monthKeys.length > 0) loadLeitura();
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     NAVEGAÇÃO DE MÊS
+  ══════════════════════════════════════════════════════════ */
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    if (curIdx > 0) { curIdx--; onMonthChange(); }
+  });
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    if (curIdx < monthKeys.length - 1) { curIdx++; onMonthChange(); }
+  });
+
+  function updateNavUI() {
+    if (!monthKeys.length) return;
+    document.getElementById('monthLabel').textContent = labelFromKey(monthKeys[curIdx]);
     document.getElementById('prevMonth').disabled = curIdx === 0;
     document.getElementById('nextMonth').disabled = curIdx === monthKeys.length - 1;
+  }
+
+  function onMonthChange() {
+    updateNavUI();
+    renderMonth();
+    if (activeTab === 'leitura') loadLeitura();
+    else leituraData = []; // limpa cache para recarregar ao trocar de aba
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     ABA REUNIÕES
+  ══════════════════════════════════════════════════════════ */
+  function renderMonth() {
+    if (!monthKeys.length) return;
+    const key   = monthKeys[curIdx];
+    const lista = allReunioes.filter(r => monthKey(r.date) === key);
+    const tbody = document.getElementById('rfsBody');
 
     if (lista.length === 0) {
       tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Nenhuma reunião neste mês.</td></tr>`;
@@ -222,92 +321,226 @@
 
     tbody.innerHTML = lista.map(r => {
       const tipo    = r.tipo || 'normal';
-      const dateStr = formatDateShort(r.date);
       const isEsp   = tipo !== 'normal';
-
-      // Célula de data (com badge se for especial)
-      const badgeHTML = isEsp
-        ? `<br><span class="tipo-badge ${h(tipo)}">${h(TIPO_LABEL[tipo] || tipo)}</span>`
-        : '';
-
-      // Tema
-      const temaHTML = r.tema
-        ? h(r.tema)
-        : `<span class="tema-vazio">—</span>`;
-
-      // Orador + congregação
-      const oradorHTML = r.orador || r.congregacao
+      const badge   = isEsp ? `<br><span class="tipo-badge ${h(tipo)}">${h(TIPO_LABEL[tipo] || tipo)}</span>` : '';
+      const tema    = r.tema ? h(r.tema) : `<span class="tema-vazio">—</span>`;
+      const orador  = (r.orador || r.congregacao)
         ? `<span class="orador-nome">${h(r.orador || '—')}</span>` +
           (r.congregacao ? `<br><span class="orador-cong">(${h(r.congregacao)})</span>` : '')
         : `<span class="tema-vazio">—</span>`;
-
-      // Presidente
-      const presHTML = r.presidente
-        ? h(r.presidente)
-        : `<span class="tema-vazio">—</span>`;
+      const pres    = r.presidente ? h(r.presidente) : `<span class="tema-vazio">—</span>`;
 
       return `<tr class="rfs-row ${h(tipo)}">
-        <td class="cell-data col-data-rfs" data-label="Data">${dateStr}${badgeHTML}</td>
-        <td data-label="Tema">${temaHTML}</td>
-        <td data-label="Orador">${oradorHTML}</td>
-        <td data-label="Presidente">${presHTML}</td>
+        <td class="cell-data col-data-rfs" data-label="Data">${formatDateShort(r.date)}${badge}</td>
+        <td data-label="Tema">${tema}</td>
+        <td data-label="Orador">${orador}</td>
+        <td data-label="Presidente">${pres}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', loadRFS);
+
+  async function loadRFS() {
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true; btn.textContent = 'Atualizando…';
+    try {
+      const res = await fetch('/api/rfs');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      allReunioes = await res.json();
+
+      const keySet = new Set(allReunioes.map(r => monthKey(r.date)));
+      monthKeys    = [...keySet].sort();
+
+      if (!monthKeys.length) {
+        document.getElementById('rfsBody').innerHTML =
+          `<tr><td colspan="4" class="empty-state">Nenhuma reunião encontrada.</td></tr>`;
+        document.getElementById('monthLabel').textContent = '—';
+        return;
+      }
+
+      const today   = new Date();
+      const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+      const found   = monthKeys.indexOf(todayKey);
+      curIdx = found >= 0 ? found : monthKeys.length - 1;
+
+      updateNavUI();
+      renderMonth();
+      if (activeTab === 'leitura') loadLeitura();
+    } catch (e) {
+      document.getElementById('rfsBody').innerHTML =
+        `<tr><td colspan="4" class="empty-state" style="color:#c00">Erro: ${h(e.message)}</td></tr>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Atualizar';
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     ABA LEITURA
+  ══════════════════════════════════════════════════════════ */
+  document.getElementById('leituraGenBtn').addEventListener('click', async () => {
+    if (!monthKeys.length) return;
+    const btn = document.getElementById('leituraGenBtn');
+    const isRegen = leituraData.length > 0;
+    if (isRegen && !confirm('Regenerar a leitura deste mês? Os nomes serão sorteados novamente.')) return;
+    btn.disabled = true; btn.textContent = 'Gerando…';
+    try {
+      const { year, month } = keyToYM(monthKeys[curIdx]);
+      const res = await fetch(`/api/leitura/generate/${year}/${month}`, { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      leituraData = await res.json();
+      renderLeitura();
+    } catch (e) {
+      alert('Erro ao gerar: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      updateLeituraBtn();
+    }
+  });
+
+  function updateLeituraBtn() {
+    const btn = document.getElementById('leituraGenBtn');
+    if (leituraData.length > 0) {
+      btn.textContent = 'Regenerar';
+      btn.classList.add('regen');
+    } else {
+      btn.textContent = 'Gerar Mês';
+      btn.classList.remove('regen');
+    }
+  }
+
+  async function loadLeitura() {
+    if (!monthKeys.length) return;
+    const { year, month } = keyToYM(monthKeys[curIdx]);
+    try {
+      const res = await fetch(`/api/leitura/${year}/${month}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      leituraData = await res.json();
+    } catch (e) {
+      leituraData = [];
+    }
+    renderLeitura();
+  }
+
+  function renderLeitura() {
+    updateLeituraBtn();
+    const tbody = document.getElementById('leituraBody');
+
+    if (leituraData.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="2" class="empty-state">
+        Nenhuma leitura gerada para este mês.<div class="hint">Clique em "Gerar Mês" para sortear.</div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = leituraData.map(l => {
+      const nome = l.leitura
+        ? `<span class="name-chip" onclick="openLeituraPicker(${l.id},'${l.date}')">${h(l.leitura)}</span>`
+        : `<span class="name-chip empty" onclick="openLeituraPicker(${l.id},'${l.date}')">—</span>`;
+      return `<tr>
+        <td class="cell-data col-leit-data" data-label="Data">${formatDateShort(l.date)}</td>
+        <td data-label="Leitura">${nome}</td>
       </tr>`;
     }).join('');
   }
 
   /* ══════════════════════════════════════════════════════════
-     NAVEGAÇÃO
+     PICKER MODAL
   ══════════════════════════════════════════════════════════ */
-  document.getElementById('prevMonth').addEventListener('click', () => {
-    if (curIdx > 0) { curIdx--; renderMonth(); }
-  });
-  document.getElementById('nextMonth').addEventListener('click', () => {
-    if (curIdx < monthKeys.length - 1) { curIdx++; renderMonth(); }
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
   });
 
-  /* ══════════════════════════════════════════════════════════
-     LOAD DA API
-  ══════════════════════════════════════════════════════════ */
-  async function loadRFS() {
-    const btn = document.getElementById('refreshBtn');
-    btn.disabled = true;
-    btn.textContent = 'Atualizando…';
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+    pickerCtx = null;
+  }
+
+  async function openLeituraPicker(id, date) {
+    pickerCtx = { id, date };
+    document.getElementById('modalTitle').textContent = `Leitura — ${formatDateShort(date)}`;
+    document.getElementById('modalBody').innerHTML = '<div style="padding:20px;text-align:center;color:#aaa">Carregando…</div>';
+    document.getElementById('modalOverlay').classList.add('active');
 
     try {
-      const res  = await fetch('/api/rfs');
+      const res = await fetch(`/api/available-leitura/${date}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      allReunioes = await res.json();
-
-      // Monta lista de meses únicos com dados
-      const keySet = new Set(allReunioes.map(r => monthKey(r.date)));
-      monthKeys    = [...keySet].sort();
-
-      if (monthKeys.length === 0) {
-        document.getElementById('rfsBody').innerHTML =
-          `<tr><td colspan="4" style="text-align:center;padding:40px;color:#aaa;">Nenhuma reunião encontrada.</td></tr>`;
-        document.getElementById('monthLabel').textContent = '—';
-        return;
-      }
-
-      // Posiciona no mês atual (ou no mais próximo)
-      const today   = new Date();
-      const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-      const found    = monthKeys.indexOf(todayKey);
-      curIdx = found >= 0 ? found : monthKeys.length - 1;
-
-      renderMonth();
+      const people = await res.json();
+      renderPickerModal(people);
     } catch (e) {
-      document.getElementById('rfsBody').innerHTML =
-        `<tr><td colspan="4" style="text-align:center;padding:40px;color:#c00;">
-          Erro ao carregar: ${h(e.message)}
-        </td></tr>`;
-      document.getElementById('monthLabel').textContent = 'Erro';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Atualizar';
+      document.getElementById('modalBody').innerHTML =
+        `<div style="padding:20px;text-align:center;color:#c00">Erro: ${h(e.message)}</div>`;
     }
   }
 
+  function renderPickerModal(people) {
+    const sections = [
+      { key: 'blocked',       label: 'Bloqueado',       items: people.filter(p => p.blocked) },
+      { key: 'onCooldown',    label: 'Em Intervalo',     items: people.filter(p => !p.blocked && p.onCooldown) },
+      { key: 'scheduledAhead',label: 'Agendado',         items: people.filter(p => !p.blocked && !p.onCooldown && p.scheduledAhead) },
+      { key: 'free',          label: 'Livre',            items: people.filter(p => !p.blocked && !p.onCooldown && !p.scheduledAhead) },
+    ];
+
+    const current = leituraData.find(l => l.id === pickerCtx?.id)?.leitura;
+
+    let html = '';
+    for (const sec of sections) {
+      if (!sec.items.length) continue;
+      html += `<div class="picker-divider">${h(sec.label)}</div>`;
+      for (const p of sec.items) {
+        let cls   = 'picker-item';
+        let badge = '';
+        if (p.blocked) {
+          cls += ' blocked';
+          badge = `<span class="picker-badge badge-block">outro serviço</span>`;
+        } else if (p.onCooldown) {
+          cls += ' on-cooldown';
+          badge = `<span class="picker-badge badge-cool">↩ ${p.lastPos}</span>`;
+        } else if (p.scheduledAhead) {
+          cls += ' scheduled-ahead';
+          badge = `<span class="picker-badge badge-ahead">↪ ${p.nextIdx + 1}ª</span>`;
+        } else {
+          if (p.lastPos > 0) {
+            badge = `<span class="picker-badge badge-ok">↩ ${p.lastPos}</span>`;
+          }
+        }
+        if (p.name === current) cls += ' selected';
+
+        const click = p.blocked ? '' : `onclick="confirmLeitura(${h(JSON.stringify(p.name))})"`;
+        html += `<div class="${cls}" ${click}>
+          <span>${h(p.name)}</span>${badge}
+        </div>`;
+      }
+    }
+
+    document.getElementById('modalBody').innerHTML = html;
+  }
+
+  async function confirmLeitura(name) {
+    if (!pickerCtx) return;
+    const { id, date } = pickerCtx;
+    closeModal();
+
+    try {
+      const res = await fetch(`/api/leitura/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leitura: name }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Atualiza localmente sem recarregar tudo
+      const entry = leituraData.find(l => l.id === id);
+      if (entry) entry.leitura = name;
+      renderLeitura();
+    } catch (e) {
+      alert('Erro ao salvar: ' + e.message);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════════════════════ */
   loadRFS();
   </script>
 

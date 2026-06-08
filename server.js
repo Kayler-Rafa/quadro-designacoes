@@ -57,7 +57,7 @@ app.post('/api/assignments/generate/:year/:month', async (req, res) => {
     const year = parseInt(req.params.year);
     const month = parseInt(req.params.month);
 
-    const people = gen.getPeople();
+    const people = await gen.getPeople();
     const dates = gen.getMeetingDates(year, month);
     const pairs = gen.computeCleaningPairs(people.G);
 
@@ -103,7 +103,7 @@ app.put('/api/assignments/:id', async (req, res) => {
 app.get('/api/available/:date/:role', async (req, res) => {
   try {
     const { date, role } = req.params;
-    const people = gen.getPeople();
+    const people = await gen.getPeople();
 
     const poolMap = {
       indicador_externo: { pool: people.I, role: 'indicador' },
@@ -146,7 +146,7 @@ app.get('/api/health', async (req, res) => {
     info.dbError = e.message;
   }
   try {
-    const people = gen.getPeople();
+    const people = await gen.getPeople();
     info.peopleOk = true;
     info.volantes = people.V.length;
   } catch (e) {
@@ -182,14 +182,86 @@ app.get('/api/grupos', async (req, res) => {
   }
 });
 
+// ── Leitura ────────────────────────────────────────────────────────────────
+
+// GET leitura for a month
+app.get('/api/leitura/:year/:month', async (req, res) => {
+  try {
+    res.json(await db.getLeituraMonth(parseInt(req.params.year), parseInt(req.params.month)));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST generate leitura for a month
+app.post('/api/leitura/generate/:year/:month', async (req, res) => {
+  try {
+    const year   = parseInt(req.params.year);
+    const month  = parseInt(req.params.month);
+    const prefix = `${year}-${String(month).padStart(2, '0')}`;
+
+    const [people, rfsData, allLeitura, allAssignments] = await Promise.all([
+      gen.getPeople(),
+      rfs.getRFS(),
+      db.getAllLeitura(),
+      db.getAllAssignments(),
+    ]);
+
+    const rfsDates = rfsData.filter(r => r.date.startsWith(prefix)).map(r => r.date);
+
+    await db.deleteLeituraMonth(year, month);
+
+    const leituraHistory = allLeitura.filter(l => !l.date.startsWith(prefix));
+    const generated = gen.generateLeituraMonth(rfsDates, leituraHistory, allAssignments, rfsData, people.L || []);
+
+    for (const entry of generated) {
+      await db.upsertLeitura(entry);
+    }
+
+    res.json(await db.getLeituraMonth(year, month));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT update a leitura assignment
+app.put('/api/leitura/:id', async (req, res) => {
+  try {
+    await db.updateLeitura(parseInt(req.params.id), req.body);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET available people for leitura on a date
+app.get('/api/available-leitura/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+    const [people, rfsData, allLeitura, allAssignments] = await Promise.all([
+      gen.getPeople(),
+      rfs.getRFS(),
+      db.getAllLeitura(),
+      db.getAllAssignments(),
+    ]);
+    res.json(gen.getAvailableLeitura(people.L || [], date, allLeitura, rfsData, allAssignments));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET meeting dates for a month
 app.get('/api/dates/:year/:month', (req, res) => {
   res.json(gen.getMeetingDates(parseInt(req.params.year), parseInt(req.params.month)));
 });
 
 // GET people lists
-app.get('/api/people', (req, res) => {
-  res.json(gen.getPeople());
+app.get('/api/people', async (req, res) => {
+  try {
+    res.json(await gen.getPeople());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Export for Vercel serverless; also listen when run directly

@@ -19,12 +19,18 @@ function getKV() {
 }
 
 async function load() {
+  let data;
   if (IS_VERCEL) {
-    const data = await getKV().get(DATA_KEY);
-    return data || { assignments: [], settings: {} };
+    data = await getKV().get(DATA_KEY);
+    data = data || {};
+  } else {
+    if (!fs.existsSync(DB_FILE)) data = {};
+    else data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
   }
-  if (!fs.existsSync(DB_FILE)) return { assignments: [], settings: {} };
-  return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  if (!data.assignments) data.assignments = [];
+  if (!data.leitura)     data.leitura     = [];
+  if (!data.settings)    data.settings    = {};
+  return data;
 }
 
 async function persist(data) {
@@ -84,6 +90,50 @@ async function getAllAssignments() {
   return [...data.assignments].sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/* ── Leitura ─────────────────────────────────────────────────────────────── */
+
+async function getLeituraMonth(year, month) {
+  const data = await load();
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  return data.leitura
+    .filter(l => l.date.startsWith(prefix))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+async function getAllLeitura() {
+  const data = await load();
+  return [...data.leitura].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+async function upsertLeitura(entry) {
+  const data = await load();
+  const idx = data.leitura.findIndex(l => l.date === entry.date);
+  if (idx >= 0) {
+    data.leitura[idx] = { ...data.leitura[idx], ...entry };
+  } else {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    data.leitura.push({ id, ...entry });
+  }
+  data.leitura.sort((a, b) => a.date.localeCompare(b.date));
+  await persist(data);
+}
+
+async function updateLeitura(id, updates) {
+  const data = await load();
+  const idx = data.leitura.findIndex(l => l.id === id);
+  if (idx >= 0) {
+    data.leitura[idx] = { ...data.leitura[idx], ...updates };
+    await persist(data);
+  }
+}
+
+async function deleteLeituraMonth(year, month) {
+  const data = await load();
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  data.leitura = data.leitura.filter(l => !l.date.startsWith(prefix));
+  await persist(data);
+}
+
 module.exports = {
   getMonthAssignments,
   getAssignment,
@@ -91,4 +141,9 @@ module.exports = {
   updateAssignment,
   deleteMonthAssignments,
   getAllAssignments,
+  getLeituraMonth,
+  getAllLeitura,
+  upsertLeitura,
+  updateLeitura,
+  deleteLeituraMonth,
 };
