@@ -103,8 +103,8 @@ document.getElementById('btnGerar').addEventListener('click', async () => {
   out.className = '';
   out.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">Buscando dados…</div>';
   try {
-    const { desig, rfs, rvm, grupos } = await fetchAll(year, month);
-    out.innerHTML = buildQuadro(year, month, desig, rfs, rvm, grupos);
+    const { desig, rfs, rvm, grupos, leitura } = await fetchAll(year, month);
+    out.innerHTML = buildQuadro(year, month, desig, rfs, rvm, grupos, leitura);
     out.className = 'visible';
     document.getElementById('btnPrint').style.display = '';
   } catch(e) {

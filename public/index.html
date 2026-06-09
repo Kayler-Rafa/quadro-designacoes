@@ -95,8 +95,8 @@
       const month = now.getMonth() + 1;
       const out   = document.getElementById('quadroOutput');
       try {
-        const { desig, rfs, rvm, grupos } = await fetchAll(year, month);
-        out.innerHTML = buildQuadro(year, month, desig, rfs, rvm, grupos);
+        const { desig, rfs, rvm, grupos, leitura } = await fetchAll(year, month);
+        out.innerHTML = buildQuadro(year, month, desig, rfs, rvm, grupos, leitura);
       } catch (e) {
         out.innerHTML = `<div class="erro">Erro ao carregar: ${e.message}</div>`;
       }

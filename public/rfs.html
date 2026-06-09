@@ -178,6 +178,7 @@
                 <th style="text-align:left">Tema</th>
                 <th class="col-orador">Orador<br>(Congregação)</th>
                 <th class="col-pres">Presidente</th>
+                <th style="width:110px">Leitor</th>
               </tr>
             </thead>
             <tbody id="rfsBody">
@@ -257,10 +258,11 @@
   /* ══════════════════════════════════════════════════════════
      ESTADO GLOBAL
   ══════════════════════════════════════════════════════════ */
-  let allReunioes = [];
-  let monthKeys   = [];
-  let curIdx      = 0;
-  let activeTab   = 'reunioes';
+  let allReunioes  = [];
+  let monthKeys    = [];
+  let curIdx       = 0;
+  let activeTab    = 'reunioes';
+  let leituraCache = {}; // { 'YYYY-MM': { date: nome } }
 
   let leituraData     = [];
   let pickerCtx       = null; // { id, date }
@@ -298,11 +300,27 @@
     document.getElementById('nextMonth').disabled = curIdx === monthKeys.length - 1;
   }
 
-  function onMonthChange() {
+  async function onMonthChange() {
     updateNavUI();
+    await loadLeituraForMonth();
     renderMonth();
     if (activeTab === 'leitura') loadLeitura();
-    else leituraData = []; // limpa cache para recarregar ao trocar de aba
+    else leituraData = [];
+  }
+
+  async function loadLeituraForMonth() {
+    if (!monthKeys.length) return;
+    const key = monthKeys[curIdx];
+    if (leituraCache[key]) return; // já carregado
+    const [y, m] = key.split('-');
+    try {
+      const res = await fetch(`/api/leitura/${y}/${m}`);
+      if (!res.ok) { leituraCache[key] = {}; return; }
+      const data = await res.json();
+      const map = {};
+      data.forEach(l => { map[l.date] = l.leitura; });
+      leituraCache[key] = map;
+    } catch { leituraCache[key] = {}; }
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -310,12 +328,13 @@
   ══════════════════════════════════════════════════════════ */
   function renderMonth() {
     if (!monthKeys.length) return;
-    const key   = monthKeys[curIdx];
-    const lista = allReunioes.filter(r => monthKey(r.date) === key);
-    const tbody = document.getElementById('rfsBody');
+    const key     = monthKeys[curIdx];
+    const lista   = allReunioes.filter(r => monthKey(r.date) === key);
+    const tbody   = document.getElementById('rfsBody');
+    const leitMap = leituraCache[key] || {};
 
     if (lista.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Nenhuma reunião neste mês.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma reunião neste mês.</td></tr>`;
       return;
     }
 
@@ -329,12 +348,16 @@
           (r.congregacao ? `<br><span class="orador-cong">(${h(r.congregacao)})</span>` : '')
         : `<span class="tema-vazio">—</span>`;
       const pres    = r.presidente ? h(r.presidente) : `<span class="tema-vazio">—</span>`;
+      const leitor  = (!r.orador && !r.presidente)
+        ? `<span class="tema-vazio">—</span>`
+        : (leitMap[r.date] ? h(leitMap[r.date]) : `<span class="tema-vazio">—</span>`);
 
       return `<tr class="rfs-row ${h(tipo)}">
         <td class="cell-data col-data-rfs" data-label="Data">${formatDateShort(r.date)}${badge}</td>
         <td data-label="Tema">${tema}</td>
         <td data-label="Orador">${orador}</td>
         <td data-label="Presidente">${pres}</td>
+        <td data-label="Leitor">${leitor}</td>
       </tr>`;
     }).join('');
   }
@@ -365,6 +388,7 @@
       curIdx = found >= 0 ? found : monthKeys.length - 1;
 
       updateNavUI();
+      await loadLeituraForMonth();
       renderMonth();
       if (activeTab === 'leitura') loadLeitura();
     } catch (e) {

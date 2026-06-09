@@ -28,17 +28,19 @@ function monthLabel(y, m) { return `${MESES[m-1]} de ${y}`; }
 /* ── Fetch ── */
 async function fetchAll(year, month) {
   const prefix = `${year}-${String(month).padStart(2,'0')}`;
-  const [desig, allRfs, allRvm, grupos] = await Promise.all([
+  const [desig, allRfs, allRvm, grupos, leitura] = await Promise.all([
     fetch(`/api/assignments/${year}/${month}`).then(r => r.json()),
     fetch('/api/rfs').then(r => r.json()),
     fetch('/api/rvm').then(r => r.json()),
     fetch('/api/grupos').then(r => r.json()),
+    fetch(`/api/leitura/${year}/${month}`).then(r => r.json()).catch(() => []),
   ]);
   return {
     desig,
-    rfs:  allRfs.filter(r => r.date.startsWith(prefix)),
-    rvm:  allRvm.filter(s => s.date.startsWith(prefix)),
+    rfs:    allRfs.filter(r => r.date.startsWith(prefix)),
+    rvm:    allRvm.filter(s => s.date.startsWith(prefix)),
     grupos,
+    leitura,
   };
 }
 
@@ -189,18 +191,25 @@ function buildPagesRVM(rvm, year, month) {
 }
 
 /* ── Página RFS + Designações + Limpeza ── */
-function buildPageRFS(rfs) {
+function buildPageRFS(rfs, leitura) {
+  const leitMap = {};
+  (leitura || []).forEach(l => { leitMap[l.date] = l.leitura; });
+
   const rows = rfs.length
     ? rfs.map(r => {
         const congr = r.congregacao ? `<br><span style="font-size:10px;color:#888">(${h(r.congregacao)})</span>` : '';
+        const leitor = (!r.orador && !r.presidente)
+          ? '—'
+          : h(leitMap[r.date] || '—');
         return `<tr>
           <td class="td-date">${fmtShort(r.date)}</td>
           <td class="left">${h(r.tema||'—')}</td>
           <td>${h(r.orador||'—')}${congr}</td>
           <td>${h(r.presidente||'—')}</td>
+          <td>${leitor}</td>
         </tr>`;
       }).join('')
-    : `<tr><td colspan="4" style="text-align:center;color:#aaa;padding:10px;font-style:italic">Nenhuma reunião registrada.</td></tr>`;
+    : `<tr><td colspan="5" style="text-align:center;color:#aaa;padding:10px;font-style:italic">Nenhuma reunião registrada.</td></tr>`;
 
   return `
     <div class="qa-section-label">Reuniões de Fim de Semana</div>
@@ -209,8 +218,9 @@ function buildPageRFS(rfs) {
         <thead><tr>
           <th class="left" style="width:56px">Data</th>
           <th class="left">Tema</th>
-          <th style="width:150px">Orador (Congregação)</th>
-          <th style="width:120px">Presidente</th>
+          <th style="width:135px">Orador (Congregação)</th>
+          <th style="width:110px">Presidente</th>
+          <th style="width:110px">Leitor</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -263,12 +273,12 @@ function buildPageDesig(desig) {
     </div>`;
 }
 
-function buildPageRFSDesigLimp(rfs, desig, year, month) {
+function buildPageRFSDesigLimp(rfs, desig, leitura, year, month) {
   return `
   <div class="a4-page">
     <div class="qa-page-title">Designações — ${monthLabel(year, month)}</div>
     <div class="a4-fill">
-      ${buildPageRFS(rfs)}
+      ${buildPageRFS(rfs, leitura)}
       ${buildPageDesig(desig)}
     </div>
   </div>`;
@@ -326,10 +336,10 @@ function buildPageMapa() {
 }
 
 /* ── Render completo ── */
-function buildQuadro(year, month, desig, rfs, rvm, grupos) {
+function buildQuadro(year, month, desig, rfs, rvm, grupos, leitura) {
   return buildCapa(year, month)
     + buildPagesRVM(rvm, year, month)
-    + buildPageRFSDesigLimp(rfs, desig, year, month)
+    + buildPageRFSDesigLimp(rfs, desig, leitura, year, month)
     + buildPageGrupos(grupos)
     + buildPageMapa();
 }
