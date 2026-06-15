@@ -508,7 +508,12 @@
 
     const current = leituraData.find(l => l.id === pickerCtx?.id)?.leitura;
 
-    let html = '';
+    const semLeitorCls = 'picker-item' + (!current ? ' selected' : '');
+    let html = `<div class="picker-divider">Sem Leitor</div>
+      <div class="${semLeitorCls}" onclick="confirmLeitura(null)">
+        <span style="color:#999;font-style:italic">— (nenhum)</span>
+      </div>`;
+
     for (const sec of sections) {
       if (!sec.items.length) continue;
       html += `<div class="picker-divider">${h(sec.label)}</div>`;
@@ -556,6 +561,12 @@
       // Atualiza localmente sem recarregar tudo
       const entry = leituraData.find(l => l.id === id);
       if (entry) entry.leitura = name;
+      // Sincroniza cache da aba Reuniões
+      const mKey = date.slice(0, 7);
+      if (leituraCache[mKey]) {
+        if (name) leituraCache[mKey][date] = name;
+        else delete leituraCache[mKey][date];
+      }
       renderLeitura();
     } catch (e) {
       alert('Erro ao salvar: ' + e.message);
