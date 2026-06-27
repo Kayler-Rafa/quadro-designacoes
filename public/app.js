@@ -80,6 +80,21 @@ async function openPicker(date, role, assignmentId) {
   const body = document.getElementById('modalBody');
   body.innerHTML = '';
 
+  // Opção "Sem Designado"
+  const semDiv = document.createElement('div');
+  semDiv.className = 'picker-divider';
+  semDiv.textContent = 'Sem Designado';
+  body.appendChild(semDiv);
+
+  const semItem = document.createElement('div');
+  semItem.className = 'picker-item' + (!currentValue ? ' selected' : '');
+  const semSpan = document.createElement('span');
+  semSpan.textContent = '— (nenhum)';
+  semSpan.style.cssText = 'color:#999;font-style:italic';
+  semItem.appendChild(semSpan);
+  semItem.addEventListener('click', () => selectPerson(null));
+  body.appendChild(semItem);
+
   let shownAheadDiv = false;
   let shownCoolDiv  = false;
   let shownBlockDiv = false;
