@@ -1,5 +1,6 @@
-let currentYear = 2026;
-let currentMonth = 6;
+const _now = new Date();
+let currentYear = _now.getFullYear();
+let currentMonth = _now.getMonth() + 1;
 let assignments = [];
 let pickerContext = null;
 
