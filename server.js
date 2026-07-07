@@ -2,7 +2,8 @@ const express = require('express');
 const path = require('path');
 const db = require('./db');
 const gen = require('./generator');
-const rvm    = require('./rvm-parser');
+const rvm       = require('./rvm-parser');
+const rvmOnline = require('./rvm-online-parser');
 const rfs    = require('./rfs-parser');
 const grupos = require('./grupos-parser');
 
@@ -164,12 +165,19 @@ app.get('/api/rfs', async (req, res) => {
   }
 });
 
-// GET programação RVM (lê pasta /semanas)
-app.get('/api/rvm', (req, res) => {
+// GET programação RVM (planilha online; fallback para pasta /semanas)
+app.get('/api/rvm', async (req, res) => {
   try {
-    res.json(rvm.getAllSemanas());
+    const forceRefresh = req.query.refresh === '1';
+    const semanas = await rvmOnline.getAllSemanasOnline(forceRefresh);
+    res.json(semanas);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[RVM] Falha ao buscar planilha online, usando arquivos locais:', e.message);
+    try {
+      res.json(rvm.getAllSemanas());
+    } catch (e2) {
+      res.status(500).json({ error: e2.message });
+    }
   }
 });
 
