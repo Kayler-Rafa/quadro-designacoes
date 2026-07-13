@@ -58,34 +58,39 @@
       .subs-columns { flex-direction: column; }
     }
 
+    /* Mobile: uma única lista de cards, designação + registro pareados por data */
+    .mobile-combined { display: none; }
+
     @media (max-width: 640px) {
-      .subs-col .assignments-table { min-width: 0; }
-      .assignments-table, .assignments-table tbody, .assignments-table tr, .assignments-table td {
-        display: block; width: 100%;
-      }
-      .assignments-table thead { display: none; }
-      .assignments-table tbody tr {
-        background: #fff !important;
+      .subs-columns { display: none; }
+      .mobile-combined { display: block; }
+
+      .mc-card {
+        background: #fff;
         border-radius: 8px;
         box-shadow: 0 2px 6px rgba(0,0,0,.10);
         margin-bottom: 14px;
         overflow: hidden;
       }
-      .assignments-table tbody td.cell-data {
-        background: #111; color: #fff; font-weight: 700;
-        text-align: left; padding: 10px 14px; border-bottom: none;
+      .mc-card-header {
+        background: #111; color: #fff;
+        font-size: 15px; font-weight: 700;
+        padding: 10px 14px;
       }
-      .assignments-table tbody td {
+      .mc-role-row {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 10px 14px; font-size: 13px; text-align: right;
+        gap: 10px;
+        padding: 10px 14px;
+        font-size: 13px;
         border-bottom: 1px solid #f0f0f0;
       }
-      .assignments-table tbody td:last-child { border-bottom: none; }
-      .assignments-table tbody td::before {
-        content: attr(data-label);
+      .mc-role-row:last-child { border-bottom: none; }
+      .mc-role-label {
         font-size: 11px; font-weight: 700; text-transform: uppercase;
-        letter-spacing: .4px; color: #888; text-align: left;
-        flex-shrink: 0; margin-right: 10px;
+        letter-spacing: .4px; color: #888; flex-shrink: 0;
+      }
+      .mc-role-values {
+        display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
       }
     }
   </style>
@@ -163,6 +168,8 @@
           </div>
         </div>
       </div>
+
+      <div class="mobile-combined" id="mobileCombined"></div>
     </section>
 
   </div>

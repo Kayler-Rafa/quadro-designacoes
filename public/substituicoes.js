@@ -30,6 +30,14 @@ const ROLE_LIST = {
   audio: 'A',
 };
 
+const MOBILE_LABELS = {
+  indicador_externo: 'Ind. Externo',
+  indicador_interno: 'Ind. Interno',
+  volante1: 'Mic. Volante 1',
+  volante2: 'Mic. Volante 2',
+  audio: 'Áudio/Vídeo',
+};
+
 function formatDate(dateStr) {
   const [, month, day] = dateStr.split('-');
   const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -141,16 +149,9 @@ function render() {
   if (assignments.length === 0) {
     leftBody.innerHTML  = `<tr><td colspan="6"><div class="empty-state">Nenhuma designação gerada para este mês.</div></td></tr>`;
     rightBody.innerHTML = `<tr><td colspan="6"><div class="empty-state">—</div></td></tr>`;
+    renderMobileCombined();
     return;
   }
-
-  const MOBILE_LABELS = {
-    indicador_externo: 'Ind. Externo',
-    indicador_interno: 'Ind. Interno',
-    volante1: 'Mic. Volante 1',
-    volante2: 'Mic. Volante 2',
-    audio: 'Áudio/Vídeo',
-  };
 
   assignments.forEach(a => {
     // ── Linha esquerda: designação original, somente leitura, colorida ──
@@ -207,6 +208,69 @@ function render() {
   });
 
   syncRowHeights();
+  renderMobileCombined();
+}
+
+// ── Visão combinada para mobile: designação + registro juntos por data ─────
+
+function renderMobileCombined() {
+  const el = document.getElementById('mobileCombined');
+  if (!el) return;
+  el.innerHTML = '';
+
+  if (assignments.length === 0) {
+    el.innerHTML = `<div class="empty-state">Nenhuma designação gerada para este mês.</div>`;
+    return;
+  }
+
+  assignments.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'mc-card';
+
+    const header = document.createElement('div');
+    header.className = 'mc-card-header';
+    header.textContent = formatDate(a.date);
+    card.appendChild(header);
+
+    for (const role of ROLES) {
+      const row = document.createElement('div');
+      row.className = 'mc-role-row';
+
+      const label = document.createElement('div');
+      label.className = 'mc-role-label';
+      label.textContent = MOBILE_LABELS[role];
+      row.appendChild(label);
+
+      const values = document.createElement('div');
+      values.className = 'mc-role-values';
+
+      const original = a[role];
+      const sub = getSub(a.date, role);
+
+      const statusSpan = document.createElement('span');
+      statusSpan.className = 'sub-status';
+      statusSpan.textContent = original || '—';
+      if (original) {
+        if (!sub || sub === original) statusSpan.classList.add('status-green');
+        else statusSpan.classList.add('status-red');
+      } else {
+        statusSpan.classList.add('status-neutral');
+      }
+      values.appendChild(statusSpan);
+
+      const chip = document.createElement('span');
+      chip.className = 'name-chip' + (sub ? '' : ' empty');
+      chip.textContent = sub || '—';
+      chip.title = 'Clique para registrar substituição';
+      chip.addEventListener('click', () => openPicker(a.date, role));
+      values.appendChild(chip);
+
+      row.appendChild(values);
+      card.appendChild(row);
+    }
+
+    el.appendChild(card);
+  });
 }
 
 // ── Alinha a altura de cada linha entre as duas tabelas (desktop) ──────────
