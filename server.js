@@ -100,6 +100,33 @@ app.put('/api/assignments/:id', async (req, res) => {
   }
 });
 
+// GET substituições registradas para um mês
+app.get('/api/substituicoes/:year/:month', async (req, res) => {
+  try {
+    const subs = await db.getSubstituicoesMonth(
+      parseInt(req.params.year),
+      parseInt(req.params.month)
+    );
+    res.json(subs);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT registra (ou limpa, se nome for null) a substituição de uma designação
+const SUBSTITUICAO_ROLES = ['indicador_externo', 'indicador_interno', 'volante1', 'volante2', 'audio'];
+app.put('/api/substituicoes/:date/:role', async (req, res) => {
+  try {
+    if (!SUBSTITUICAO_ROLES.includes(req.params.role)) {
+      return res.status(400).json({ error: 'role inválido' });
+    }
+    await db.upsertSubstituicao(req.params.date, req.params.role, req.body.nome || null);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET available people for a role on a date
 app.get('/api/available/:date/:role', async (req, res) => {
   try {

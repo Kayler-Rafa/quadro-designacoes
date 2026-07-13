@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Substituições</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .app-wide { max-width: 1760px; }
+
+    .subs-legend {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: #555;
+    }
+    .subs-legend-item { display: flex; align-items: center; gap: 6px; }
+    .subs-legend-dot {
+      width: 11px; height: 11px; border-radius: 50%; display: inline-block;
+    }
+    .dot-green { background: #1a7a1a; }
+    .dot-red   { background: #c02020; }
+
+    .subs-columns {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .subs-col { flex: 1; min-width: 0; }
+    .subs-col .table-wrapper { overflow-x: auto; }
+    .subs-col .assignments-table { min-width: 660px; }
+    .subs-col-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+    .subs-col-hint {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .sub-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .sub-status.status-green { background: #d4f7d4; color: #1a7a1a; }
+    .sub-status.status-red   { background: #ffe0e0; color: #c02020; }
+    .sub-status.status-neutral { color: #bbb; font-style: italic; font-weight: 400; }
+
+    @media (max-width: 900px) {
+      .subs-columns { flex-direction: column; }
+    }
+
+    @media (max-width: 640px) {
+      .subs-col .assignments-table { min-width: 0; }
+      .assignments-table, .assignments-table tbody, .assignments-table tr, .assignments-table td {
+        display: block; width: 100%;
+      }
+      .assignments-table thead { display: none; }
+      .assignments-table tbody tr {
+        background: #fff !important;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,.10);
+        margin-bottom: 14px;
+        overflow: hidden;
+      }
+      .assignments-table tbody td.cell-data {
+        background: #111; color: #fff; font-weight: 700;
+        text-align: left; padding: 10px 14px; border-bottom: none;
+      }
+      .assignments-table tbody td {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 14px; font-size: 13px; text-align: right;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .assignments-table tbody td:last-child { border-bottom: none; }
+      .assignments-table tbody td::before {
+        content: attr(data-label);
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .4px; color: #888; text-align: left;
+        flex-shrink: 0; margin-right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <ul class="navbar-links" id="navLinks">
+      <li><a href="/designacoes" class="nav-link" data-section="mecanicas">Designações</a></li>
+      <li><a href="/rvm.html" class="nav-link" data-section="rvm">RVM</a></li>
+      <li><a href="/rfs.html" class="nav-link" data-section="rfs">RFS</a></li>
+      <li><a href="/grupos.html" class="nav-link" data-section="grupos">Grupos</a></li>
+      <li><a href="/substituicoes.html" class="nav-link active" data-section="substituicoes">Substituições</a></li>
+      <li><a href="/quadro.html" class="nav-link" data-section="quadro">Quadro</a></li>
+      <li><a href="/mapa.html" class="nav-link">Mapa</a></li>
+    </ul>
+  </nav>
+
+  <div class="app app-wide">
+
+    <div class="month-nav">
+      <button class="nav-btn" id="prevMonth">&#8592;</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button class="nav-btn" id="nextMonth">&#8594;</button>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <h1 class="section-title">Substituições</h1>
+      </div>
+
+      <div class="subs-legend">
+        <div class="subs-legend-item"><span class="subs-legend-dot dot-green"></span> Cumpriu a designação</div>
+        <div class="subs-legend-item"><span class="subs-legend-dot dot-red"></span> Foi substituído</div>
+      </div>
+
+      <div class="subs-columns">
+        <div class="subs-col">
+          <div class="subs-col-title">Designações do Mês</div>
+          <div class="subs-col-hint">Somente leitura — cores refletem o registro ao lado.</div>
+          <div class="table-wrapper">
+            <table class="assignments-table" id="leftTable">
+              <thead>
+                <tr>
+                  <th class="col-data">Data</th>
+                  <th class="col-ind">Ind.<br>Externo</th>
+                  <th class="col-ind">Ind.<br>Interno</th>
+                  <th class="col-vol">Volante 1</th>
+                  <th class="col-vol">Volante 2</th>
+                  <th class="col-av">Áudio/Vídeo</th>
+                </tr>
+              </thead>
+              <tbody id="leftBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subs-col">
+          <div class="subs-col-title">Registro de Comparecimento</div>
+          <div class="subs-col-hint">Clique para informar quem realmente cumpriu, se diferente do designado.</div>
+          <div class="table-wrapper">
+            <table class="assignments-table" id="rightTable">
+              <thead>
+                <tr>
+                  <th class="col-data">Data</th>
+                  <th class="col-ind">Ind.<br>Externo</th>
+                  <th class="col-ind">Ind.<br>Interno</th>
+                  <th class="col-vol">Volante 1</th>
+                  <th class="col-vol">Volante 2</th>
+                  <th class="col-av">Áudio/Vídeo</th>
+                </tr>
+              </thead>
+              <tbody id="rightBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Picker Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span id="modalTitle">Registrar substituição</span>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="substituicoes.js"></script>
+</body>
+</html>

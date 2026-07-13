@@ -27,9 +27,10 @@ async function load() {
     if (!fs.existsSync(DB_FILE)) data = {};
     else data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
   }
-  if (!data.assignments) data.assignments = [];
-  if (!data.leitura)     data.leitura     = [];
-  if (!data.settings)    data.settings    = {};
+  if (!data.assignments)    data.assignments    = [];
+  if (!data.leitura)        data.leitura        = [];
+  if (!data.substituicoes)  data.substituicoes  = [];
+  if (!data.settings)       data.settings       = {};
   return data;
 }
 
@@ -134,6 +135,26 @@ async function deleteLeituraMonth(year, month) {
   await persist(data);
 }
 
+/* ── Substituições ───────────────────────────────────────────────────────── */
+
+async function getSubstituicoesMonth(year, month) {
+  const data = await load();
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  return data.substituicoes.filter(s => s.date.startsWith(prefix));
+}
+
+async function upsertSubstituicao(date, role, nome) {
+  const data = await load();
+  const idx = data.substituicoes.findIndex(s => s.date === date && s.role === role);
+  if (nome) {
+    if (idx >= 0) data.substituicoes[idx].nome = nome;
+    else data.substituicoes.push({ date, role, nome });
+  } else if (idx >= 0) {
+    data.substituicoes.splice(idx, 1);
+  }
+  await persist(data);
+}
+
 module.exports = {
   getMonthAssignments,
   getAssignment,
@@ -146,4 +167,6 @@ module.exports = {
   upsertLeitura,
   updateLeitura,
   deleteLeituraMonth,
+  getSubstituicoesMonth,
+  upsertSubstituicao,
 };
