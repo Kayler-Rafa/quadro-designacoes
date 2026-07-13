@@ -78,8 +78,6 @@
         padding: 10px 14px;
       }
       .mc-role-row {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 10px;
         padding: 10px 14px;
         font-size: 13px;
         border-bottom: 1px solid #f0f0f0;
@@ -87,10 +85,18 @@
       .mc-role-row:last-child { border-bottom: none; }
       .mc-role-label {
         font-size: 11px; font-weight: 700; text-transform: uppercase;
-        letter-spacing: .4px; color: #888; flex-shrink: 0;
+        letter-spacing: .4px; color: #888;
+        margin-bottom: 6px;
       }
-      .mc-role-values {
-        display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+      .mc-value-line {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px;
+        padding: 3px 0;
+      }
+      .mc-value-tag {
+        font-size: 11px;
+        color: #aaa;
+        flex-shrink: 0;
       }
     }
   </style>

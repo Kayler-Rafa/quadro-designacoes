@@ -241,11 +241,15 @@ function renderMobileCombined() {
       label.textContent = MOBILE_LABELS[role];
       row.appendChild(label);
 
-      const values = document.createElement('div');
-      values.className = 'mc-role-values';
-
       const original = a[role];
       const sub = getSub(a.date, role);
+
+      const lineDesignado = document.createElement('div');
+      lineDesignado.className = 'mc-value-line';
+      const tagDesignado = document.createElement('span');
+      tagDesignado.className = 'mc-value-tag';
+      tagDesignado.textContent = 'Designado';
+      lineDesignado.appendChild(tagDesignado);
 
       const statusSpan = document.createElement('span');
       statusSpan.className = 'sub-status';
@@ -256,16 +260,24 @@ function renderMobileCombined() {
       } else {
         statusSpan.classList.add('status-neutral');
       }
-      values.appendChild(statusSpan);
+      lineDesignado.appendChild(statusSpan);
+      row.appendChild(lineDesignado);
+
+      const lineRegistro = document.createElement('div');
+      lineRegistro.className = 'mc-value-line';
+      const tagRegistro = document.createElement('span');
+      tagRegistro.className = 'mc-value-tag';
+      tagRegistro.textContent = 'Registro';
+      lineRegistro.appendChild(tagRegistro);
 
       const chip = document.createElement('span');
       chip.className = 'name-chip' + (sub ? '' : ' empty');
       chip.textContent = sub || '—';
       chip.title = 'Clique para registrar substituição';
       chip.addEventListener('click', () => openPicker(a.date, role));
-      values.appendChild(chip);
+      lineRegistro.appendChild(chip);
+      row.appendChild(lineRegistro);
 
-      row.appendChild(values);
       card.appendChild(row);
     }
 
