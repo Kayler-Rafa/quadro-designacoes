@@ -1,7 +1,7 @@
 /**
  * pm-parser.js
- * Busca as listas de pessoas da planilha PM no Google Sheets.
- * Mesma estrutura do PM.xlsx: abas V, I, G, A, L com nomes na coluna A.
+ * Busca as listas de pessoas da planilha PM no Google Sheets (única fonte de dados).
+ * Abas V, I, G, A, L com nomes na coluna A.
  */
 
 const https = require('https');

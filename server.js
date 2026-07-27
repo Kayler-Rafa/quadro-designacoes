@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const db = require('./db');
 const gen = require('./generator');
-const rvm       = require('./rvm-parser');
 const rvmOnline = require('./rvm-online-parser');
 const rfs    = require('./rfs-parser');
 const grupos = require('./grupos-parser');
@@ -57,34 +56,42 @@ app.post('/api/assignments/generate/:year/:month', async (req, res) => {
   try {
     const year = parseInt(req.params.year);
     const month = parseInt(req.params.month);
+    const prefix = `${year}-${String(month).padStart(2, '0')}`;
 
     const people = await gen.getPeople();
     const dates = gen.getMeetingDates(year, month);
     const pairs = gen.computeCleaningPairs(people.G);
 
-    await db.deleteMonthAssignments(year, month);
+    // Histórico de outros meses, usado para os cálculos de intervalo/rotação.
+    // Tudo abaixo roda em memória e só toca o banco uma vez, no final —
+    // evita a corrida de várias leituras/gravações por data que corrompia
+    // a rotação de áudio quando duas gerações rodavam em paralelo.
+    const history = (await db.getAllAssignments()).filter(a => !a.date.startsWith(prefix));
+    const newAssignments = [];
 
-    if (year === 2026 && month === 6) {
+    const isJune1Month = year === 2026 && month === 6;
+    if (isJune1Month) {
       const june1PairIdx = Math.floor(0 / 2) % pairs.length;
-      await db.upsertAssignment({ ...JUNE1_PRESET, limpeza: pairs[june1PairIdx] });
+      const preset = { ...JUNE1_PRESET, limpeza: pairs[june1PairIdx] };
+      newAssignments.push(preset);
+      history.push(preset);
     }
-
-    let history = await db.getAllAssignments();
 
     for (let i = 0; i < dates.length; i++) {
       const date = dates[i];
-      if (await db.getAssignment(date)) continue;
+      if (isJune1Month && date === '2026-06-01') continue; // já coberto pelo preset
 
       const last = history[history.length - 1];
       const audioIndex = last != null ? (last.audio_index + 1) % people.A.length : 0;
       const limpeza = gen.getLimpezaForDate(pairs, i);
 
       const assignment = gen.generateDay(date, history, people, audioIndex, limpeza);
-      await db.upsertAssignment(assignment);
-      history = await db.getAllAssignments();
+      newAssignments.push(assignment);
+      history.push(assignment);
     }
 
-    res.json(await db.getMonthAssignments(year, month));
+    const result = await db.regenerateMonthAssignments(year, month, newAssignments);
+    res.json(result);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -163,7 +170,6 @@ app.get('/api/health', async (req, res) => {
     isVercel: !!process.env.VERCEL,
     hasUpstashUrl: !!process.env.KV_REST_API_URL,
     hasUpstashToken: !!process.env.KV_REST_API_TOKEN,
-    xlsxExists: fs.existsSync(path.join(__dirname, 'PM.xlsx')),
     publicExists: fs.existsSync(path.join(__dirname, 'public')),
   };
   try {
@@ -192,19 +198,14 @@ app.get('/api/rfs', async (req, res) => {
   }
 });
 
-// GET programação RVM (planilha online; fallback para pasta /semanas)
+// GET programação RVM (planilha online)
 app.get('/api/rvm', async (req, res) => {
   try {
     const forceRefresh = req.query.refresh === '1';
     const semanas = await rvmOnline.getAllSemanasOnline(forceRefresh);
     res.json(semanas);
   } catch (e) {
-    console.error('[RVM] Falha ao buscar planilha online, usando arquivos locais:', e.message);
-    try {
-      res.json(rvm.getAllSemanas());
-    } catch (e2) {
-      res.status(500).json({ error: e2.message });
-    }
+    res.status(500).json({ error: e.message });
   }
 });
 

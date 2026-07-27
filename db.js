@@ -86,6 +86,24 @@ async function deleteMonthAssignments(year, month, keepDates = []) {
   await persist(data);
 }
 
+// Substitui todas as designações de um mês por `newAssignments` em uma única
+// leitura+gravação, evitando a corrida de N idas-e-vindas ao banco por data
+// que corrompia a rotação de áudio quando duas gerações rodavam em paralelo.
+async function regenerateMonthAssignments(year, month, newAssignments) {
+  const data = await load();
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  data.assignments = data.assignments.filter(a => !a.date.startsWith(prefix));
+
+  for (const assignment of newAssignments) {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    data.assignments.push({ id, ...assignment });
+  }
+
+  data.assignments.sort((a, b) => a.date.localeCompare(b.date));
+  await persist(data);
+  return data.assignments.filter(a => a.date.startsWith(prefix));
+}
+
 async function getAllAssignments() {
   const data = await load();
   return [...data.assignments].sort((a, b) => a.date.localeCompare(b.date));
@@ -161,6 +179,7 @@ module.exports = {
   upsertAssignment,
   updateAssignment,
   deleteMonthAssignments,
+  regenerateMonthAssignments,
   getAllAssignments,
   getLeituraMonth,
   getAllLeitura,

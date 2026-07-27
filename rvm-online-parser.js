@@ -1,8 +1,8 @@
 /**
  * rvm-online-parser.js
  * Busca a programação da RVM de uma planilha única no Google Sheets
- * (abas Inicial, Tesouros, Escola, Vida) e agrupa as linhas por data,
- * produzindo o mesmo formato que rvm-parser.js gera a partir dos .xlsx locais.
+ * (abas Inicial, Tesouros, Escola, Vida) e agrupa as linhas por data.
+ * Única fonte de dados da RVM — não há mais fallback para arquivos locais.
  */
 
 const https = require('https');
