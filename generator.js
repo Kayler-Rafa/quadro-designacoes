@@ -19,13 +19,31 @@ async function reloadPeople() {
   return pm.getPeopleFromSheets(true);
 }
 
+// Dias de reunião por período (0=domingo … 6=sábado). A regra vale a partir do
+// mês `from` (YYYY-MM) até o `from` da regra seguinte, para que regerar um mês
+// antigo continue produzindo as datas que aquele mês realmente teve.
+const MEETING_DAY_RULES = [
+  { from: '0000-00', meioSemana: 1, fimSemana: 6 }, // segunda e sábado
+  { from: '2026-09', meioSemana: 4, fimSemana: 6 }, // quinta e sábado
+];
+
+function getMeetingDays(year, month) {
+  const key = `${year}-${String(month).padStart(2, '0')}`;
+  let rule = MEETING_DAY_RULES[0];
+  for (const r of MEETING_DAY_RULES) {
+    if (r.from <= key) rule = r;
+  }
+  return rule;
+}
+
 function getMeetingDates(year, month) {
   const dates = [];
+  const { meioSemana, fimSemana } = getMeetingDays(year, month);
   const daysInMonth = new Date(year, month, 0).getDate();
   for (let day = 1; day <= daysInMonth; day++) {
     const d = new Date(year, month - 1, day);
     const dow = d.getDay();
-    if (dow === 1 || dow === 6) {
+    if (dow === meioSemana || dow === fimSemana) {
       dates.push(
         `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       );
@@ -278,6 +296,7 @@ function getAvailableLeitura(lPool, date, allLeitura, rfsData, allAssignments) {
 module.exports = {
   getPeople,
   reloadPeople,
+  getMeetingDays,
   getMeetingDates,
   generateDay,
   computeCleaningPairs,
