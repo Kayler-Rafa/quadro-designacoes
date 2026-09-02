@@ -320,6 +320,7 @@
 
   </div>
 
+  <script src="mes-quadro.js"></script>
   <script>
   /* ════════════════════════════════════════════════════════════
      ESTADO GLOBAL
@@ -354,7 +355,7 @@
     const [y, m, d] = isoDate.split('-').map(Number);
     return DIAS[new Date(y, m - 1, d).getDay()];
   }
-  function monthKey(isoDate) { return isoDate.slice(0, 7); } // "YYYY-MM"
+  function monthKey(isoDate) { return boardMonthKey(isoDate); } // "YYYY-MM"
   function yearOf(isoDate)    { return isoDate.slice(0, 4); }
 
   /* ════════════════════════════════════════════════════════════

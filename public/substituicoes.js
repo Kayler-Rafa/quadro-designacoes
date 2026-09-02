@@ -1,6 +1,6 @@
-const _now2 = new Date();
-let currentYear  = _now2.getFullYear();
-let currentMonth = _now2.getMonth() + 1;
+const _mesAtual2 = currentBoardMonth();
+let currentYear  = _mesAtual2.year;
+let currentMonth = _mesAtual2.month;
 
 let assignments    = [];
 let substituicoes   = []; // [{date, role, nome}]

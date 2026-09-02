@@ -1,6 +1,6 @@
-const _now = new Date();
-let currentYear = _now.getFullYear();
-let currentMonth = _now.getMonth() + 1;
+const _mesAtual = currentBoardMonth();
+let currentYear = _mesAtual.year;
+let currentMonth = _mesAtual.month;
 let assignments = [];
 let pickerContext = null;
 

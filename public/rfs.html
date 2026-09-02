@@ -227,6 +227,7 @@
     </div>
   </div>
 
+  <script src="mes-quadro.js"></script>
   <script>
   /* ══════════════════════════════════════════════════════════
      CONSTANTES / UTILITÁRIOS
@@ -241,7 +242,7 @@
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-  function monthKey(iso)   { return iso.slice(0, 7); }
+  function monthKey(iso)   { return boardMonthKey(iso); }
   function dayOf(iso)      { return parseInt(iso.slice(8, 10)); }
   function monthOf(iso)    { return parseInt(iso.slice(5, 7)); }
 
@@ -384,8 +385,8 @@
         return;
       }
 
-      const today   = new Date();
-      const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+      const atual    = currentBoardMonth();
+      const todayKey = monthKeyOf(atual.year, atual.month);
       const found   = monthKeys.indexOf(todayKey);
       curIdx = found >= 0 ? found : monthKeys.length - 1;
 
@@ -564,7 +565,7 @@
       const entry = leituraData.find(l => l.id === id);
       if (entry) entry.leitura = name;
       // Sincroniza cache da aba Reuniões
-      const mKey = date.slice(0, 7);
+      const mKey = monthKey(date);
       if (leituraCache[mKey]) {
         if (name) leituraCache[mKey][date] = name;
         else delete leituraCache[mKey][date];

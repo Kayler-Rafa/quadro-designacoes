@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const db = require('./db');
 const gen = require('./generator');
+const mesQuadro = require('./public/mes-quadro');
 const rvmOnline = require('./rvm-online-parser');
 const rfs    = require('./rfs-parser');
 const grupos = require('./grupos-parser');
@@ -56,7 +57,6 @@ app.post('/api/assignments/generate/:year/:month', async (req, res) => {
   try {
     const year = parseInt(req.params.year);
     const month = parseInt(req.params.month);
-    const prefix = `${year}-${String(month).padStart(2, '0')}`;
 
     const people = await gen.getPeople();
     const dates = gen.getMeetingDates(year, month);
@@ -66,7 +66,8 @@ app.post('/api/assignments/generate/:year/:month', async (req, res) => {
     // Tudo abaixo roda em memória e só toca o banco uma vez, no final —
     // evita a corrida de várias leituras/gravações por data que corrompia
     // a rotação de áudio quando duas gerações rodavam em paralelo.
-    const history = (await db.getAllAssignments()).filter(a => !a.date.startsWith(prefix));
+    const history = (await db.getAllAssignments())
+      .filter(a => !mesQuadro.isInBoardMonth(a.date, year, month));
     const newAssignments = [];
 
     const isJune1Month = year === 2026 && month === 6;
@@ -234,7 +235,6 @@ app.post('/api/leitura/generate/:year/:month', async (req, res) => {
   try {
     const year   = parseInt(req.params.year);
     const month  = parseInt(req.params.month);
-    const prefix = `${year}-${String(month).padStart(2, '0')}`;
 
     const [people, rfsData, allLeitura, allAssignments] = await Promise.all([
       gen.getPeople(),
@@ -243,11 +243,14 @@ app.post('/api/leitura/generate/:year/:month', async (req, res) => {
       db.getAllAssignments(),
     ]);
 
-    const rfsDates = rfsData.filter(r => r.date.startsWith(prefix)).map(r => r.date);
+    const rfsDates = rfsData
+      .filter(r => mesQuadro.isInBoardMonth(r.date, year, month))
+      .map(r => r.date);
 
     await db.deleteLeituraMonth(year, month);
 
-    const leituraHistory = allLeitura.filter(l => !l.date.startsWith(prefix));
+    const leituraHistory = allLeitura
+      .filter(l => !mesQuadro.isInBoardMonth(l.date, year, month));
     const generated = gen.generateLeituraMonth(rfsDates, leituraHistory, allAssignments, rfsData, people.L || []);
 
     for (const entry of generated) {

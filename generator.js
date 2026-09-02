@@ -1,4 +1,5 @@
 const pm = require('./pm-parser');
+const mesQuadro = require('./public/mes-quadro');
 
 const COOLDOWN         = 4;
 const LEITURA_COOLDOWN = 8;
@@ -24,7 +25,7 @@ async function reloadPeople() {
 // antigo continue produzindo as datas que aquele mês realmente teve.
 const MEETING_DAY_RULES = [
   { from: '0000-00', meioSemana: 1, fimSemana: 6 }, // segunda e sábado
-  { from: '2026-09', meioSemana: 4, fimSemana: 6 }, // quinta e sábado
+  { from: '2026-10', meioSemana: 4, fimSemana: 6 }, // quinta e sábado
 ];
 
 function getMeetingDays(year, month) {
@@ -36,18 +37,27 @@ function getMeetingDays(year, month) {
   return rule;
 }
 
+function toISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isMeetingDay(d) {
+  const { meioSemana, fimSemana } = getMeetingDays(d.getFullYear(), d.getMonth() + 1);
+  const dow = d.getDay();
+  return dow === meioSemana || dow === fimSemana;
+}
+
+// Reuniões do quadro do mês. A varredura passa uma semana antes e uma depois
+// do mês porque a reunião conta pelo mês em que a semana começou (ver
+// public/mes-quadro.js) — por isso uma quinta 01/10 cai no quadro de setembro.
 function getMeetingDates(year, month) {
+  const key = mesQuadro.monthKeyOf(year, month);
   const dates = [];
-  const { meioSemana, fimSemana } = getMeetingDays(year, month);
-  const daysInMonth = new Date(year, month, 0).getDate();
-  for (let day = 1; day <= daysInMonth; day++) {
-    const d = new Date(year, month - 1, day);
-    const dow = d.getDay();
-    if (dow === meioSemana || dow === fimSemana) {
-      dates.push(
-        `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      );
-    }
+  const end = new Date(year, month, 7);
+  for (let d = new Date(year, month - 1, -6); d <= end; d.setDate(d.getDate() + 1)) {
+    if (!isMeetingDay(d)) continue;
+    const iso = toISO(d);
+    if (mesQuadro.boardMonthKey(iso) === key) dates.push(iso);
   }
   return dates;
 }

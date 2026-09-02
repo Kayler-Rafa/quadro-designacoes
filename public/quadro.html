@@ -78,14 +78,15 @@
     </section>
   </div>
 
+<script src="mes-quadro.js"></script>
 <script src="quadro-lib.js"></script>
 <script>
 /* ── Seletor de mês ── */
 (function() {
   const sel   = document.getElementById('selMes');
-  const today = new Date();
+  const atual = currentBoardMonth();
   for (let delta = -3; delta <= 9; delta++) {
-    const d = new Date(today.getFullYear(), today.getMonth() + delta, 1);
+    const d = new Date(atual.year, atual.month - 1 + delta, 1);
     const y = d.getFullYear(), m = d.getMonth() + 1;
     const opt = document.createElement('option');
     opt.value = `${y}-${m}`;

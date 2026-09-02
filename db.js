@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const mesQuadro = require('./public/mes-quadro');
 
 // In production (Vercel), use KV. Locally, use data.json.
 const IS_VERCEL = !!process.env.VERCEL;
@@ -44,9 +45,8 @@ async function persist(data) {
 
 async function getMonthAssignments(year, month) {
   const data = await load();
-  const prefix = `${year}-${String(month).padStart(2, '0')}`;
   return data.assignments
-    .filter(a => a.date.startsWith(prefix))
+    .filter(a => mesQuadro.isInBoardMonth(a.date, year, month))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -79,9 +79,8 @@ async function updateAssignment(id, updates) {
 
 async function deleteMonthAssignments(year, month, keepDates = []) {
   const data = await load();
-  const prefix = `${year}-${String(month).padStart(2, '0')}`;
   data.assignments = data.assignments.filter(
-    a => !a.date.startsWith(prefix) || keepDates.includes(a.date)
+    a => !mesQuadro.isInBoardMonth(a.date, year, month) || keepDates.includes(a.date)
   );
   await persist(data);
 }
@@ -91,8 +90,7 @@ async function deleteMonthAssignments(year, month, keepDates = []) {
 // que corrompia a rotação de áudio quando duas gerações rodavam em paralelo.
 async function regenerateMonthAssignments(year, month, newAssignments) {
   const data = await load();
-  const prefix = `${year}-${String(month).padStart(2, '0')}`;
-  data.assignments = data.assignments.filter(a => !a.date.startsWith(prefix));
+  data.assignments = data.assignments.filter(a => !mesQuadro.isInBoardMonth(a.date, year, month));
 
   for (const assignment of newAssignments) {
     const id = Date.now() + Math.floor(Math.random() * 1000);
@@ -101,7 +99,7 @@ async function regenerateMonthAssignments(year, month, newAssignments) {
 
   data.assignments.sort((a, b) => a.date.localeCompare(b.date));
   await persist(data);
-  return data.assignments.filter(a => a.date.startsWith(prefix));
+  return data.assignments.filter(a => mesQuadro.isInBoardMonth(a.date, year, month));
 }
 
 async function getAllAssignments() {
@@ -113,9 +111,8 @@ async function getAllAssignments() {
 
 async function getLeituraMonth(year, month) {
   const data = await load();
-  const prefix = `${year}-${String(month).padStart(2, '0')}`;
   return data.leitura
-    .filter(l => l.date.startsWith(prefix))
+    .filter(l => mesQuadro.isInBoardMonth(l.date, year, month))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -148,8 +145,7 @@ async function updateLeitura(id, updates) {
 
 async function deleteLeituraMonth(year, month) {
   const data = await load();
-  const prefix = `${year}-${String(month).padStart(2, '0')}`;
-  data.leitura = data.leitura.filter(l => !l.date.startsWith(prefix));
+  data.leitura = data.leitura.filter(l => !mesQuadro.isInBoardMonth(l.date, year, month));
   await persist(data);
 }
 
@@ -157,8 +153,7 @@ async function deleteLeituraMonth(year, month) {
 
 async function getSubstituicoesMonth(year, month) {
   const data = await load();
-  const prefix = `${year}-${String(month).padStart(2, '0')}`;
-  return data.substituicoes.filter(s => s.date.startsWith(prefix));
+  return data.substituicoes.filter(s => mesQuadro.isInBoardMonth(s.date, year, month));
 }
 
 async function upsertSubstituicao(date, role, nome) {

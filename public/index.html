@@ -88,12 +88,11 @@
     <div class="loading">Carregando quadro…</div>
   </div>
 
+  <script src="mes-quadro.js"></script>
   <script src="quadro-lib.js"></script>
   <script>
     (async () => {
-      const now   = new Date();
-      const year  = now.getFullYear();
-      const month = now.getMonth() + 1;
+      const { year, month } = currentBoardMonth();
       const out   = document.getElementById('quadroOutput');
       try {
         const { desig, rfs, rvm, grupos, leitura } = await fetchAll(year, month);

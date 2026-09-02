@@ -27,7 +27,6 @@ function monthLabel(y, m) { return `${MESES[m-1]} de ${y}`; }
 
 /* ── Fetch ── */
 async function fetchAll(year, month) {
-  const prefix = `${year}-${String(month).padStart(2,'0')}`;
   const [desig, allRfs, allRvm, grupos, leitura] = await Promise.all([
     fetch(`/api/assignments/${year}/${month}`).then(r => r.json()),
     fetch('/api/rfs').then(r => r.json()),
@@ -37,8 +36,8 @@ async function fetchAll(year, month) {
   ]);
   return {
     desig,
-    rfs:    allRfs.filter(r => r.date.startsWith(prefix)),
-    rvm:    allRvm.filter(s => s.date.startsWith(prefix)),
+    rfs:    allRfs.filter(r => isInBoardMonth(r.date, year, month)),
+    rvm:    allRvm.filter(s => isInBoardMonth(s.date, year, month)),
     grupos,
     leitura,
   };
