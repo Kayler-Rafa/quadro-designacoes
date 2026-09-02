@@ -2,9 +2,9 @@
  * mes-quadro.js — decide a que mês do quadro cada reunião pertence.
  *
  * A reunião conta no mês em que a SEMANA dela começou, não no mês da própria
- * data: uma quinta 01/10 cuja semana começou em 27/09 entra no quadro de
- * setembro. Reuniões anteriores ao corte continuam contando pelo mês da data,
- * para não remontar os quadros já publicados.
+ * data: a quinta 01/10 e o domingo 04/10 pertencem à semana que começou na
+ * segunda 28/09 e entram no quadro de setembro. Reuniões anteriores ao corte
+ * continuam contando pelo mês da data, para não remontar quadros já publicados.
  *
  * Usado pelo servidor (require) e pelas páginas (<script src>).
  */
@@ -14,8 +14,8 @@
   else Object.assign(root, api);
 })(typeof self !== 'undefined' ? self : globalThis, function () {
 
-  const WEEK_START_DOW  = 0;            // 0 = domingo
-  const WEEK_MONTH_FROM = '2026-10-01'; // a regra da semana vale daqui em diante
+  const WEEK_START_DOW  = 1;            // 1 = segunda (a semana vai de segunda a domingo)
+  const WEEK_MONTH_FROM = '2026-09-07'; // a regra da semana vale daqui em diante
 
   function monthKeyOf(year, month) {
     return `${year}-${String(month).padStart(2, '0')}`;

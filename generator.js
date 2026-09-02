@@ -20,19 +20,20 @@ async function reloadPeople() {
   return pm.getPeopleFromSheets(true);
 }
 
-// Dias de reunião por período (0=domingo … 6=sábado). A regra vale a partir do
-// mês `from` (YYYY-MM) até o `from` da regra seguinte, para que regerar um mês
-// antigo continue produzindo as datas que aquele mês realmente teve.
+// Dias de reunião por período (0=domingo … 6=sábado). Cada regra vale a partir
+// da data `from` — sempre uma segunda-feira, para a mudança pegar a semana
+// inteira — até o `from` da regra seguinte. Datas antigas mantêm a regra antiga,
+// de modo que regerar um mês passado reproduz as datas que ele teve.
 const MEETING_DAY_RULES = [
-  { from: '0000-00', meioSemana: 1, fimSemana: 6 }, // segunda e sábado
-  { from: '2026-10', meioSemana: 4, fimSemana: 6 }, // quinta e sábado
+  { from: '0000-00-00', meioSemana: 1, fimSemana: 6 }, // segunda e sábado
+  { from: '2026-08-31', meioSemana: 1, fimSemana: 0 }, // fim de semana passa a domingo (1º: 06/09)
+  { from: '2026-09-07', meioSemana: 4, fimSemana: 0 }, // meio de semana passa a quinta (1º: 10/09)
 ];
 
-function getMeetingDays(year, month) {
-  const key = `${year}-${String(month).padStart(2, '0')}`;
+function getMeetingDays(iso) {
   let rule = MEETING_DAY_RULES[0];
   for (const r of MEETING_DAY_RULES) {
-    if (r.from <= key) rule = r;
+    if (r.from <= iso) rule = r;
   }
   return rule;
 }
@@ -42,7 +43,7 @@ function toISO(d) {
 }
 
 function isMeetingDay(d) {
-  const { meioSemana, fimSemana } = getMeetingDays(d.getFullYear(), d.getMonth() + 1);
+  const { meioSemana, fimSemana } = getMeetingDays(toISO(d));
   const dow = d.getDay();
   return dow === meioSemana || dow === fimSemana;
 }
