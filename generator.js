@@ -20,44 +20,21 @@ async function reloadPeople() {
   return pm.getPeopleFromSheets(true);
 }
 
-// Dias de reunião por período (0=domingo … 6=sábado). Cada regra vale a partir
-// da data `from` — sempre uma segunda-feira, para a mudança pegar a semana
-// inteira — até o `from` da regra seguinte. Datas antigas mantêm a regra antiga,
-// de modo que regerar um mês passado reproduz as datas que ele teve.
-const MEETING_DAY_RULES = [
-  { from: '0000-00-00', meioSemana: 1, fimSemana: 6 }, // segunda e sábado
-  { from: '2026-08-31', meioSemana: 1, fimSemana: 0 }, // fim de semana passa a domingo (1º: 06/09)
-  { from: '2026-09-07', meioSemana: 4, fimSemana: 0 }, // meio de semana passa a quinta (1º: 10/09)
-];
-
-function getMeetingDays(iso) {
-  let rule = MEETING_DAY_RULES[0];
-  for (const r of MEETING_DAY_RULES) {
-    if (r.from <= iso) rule = r;
-  }
-  return rule;
-}
-
 function toISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function isMeetingDay(d) {
-  const { meioSemana, fimSemana } = getMeetingDays(toISO(d));
-  const dow = d.getDay();
-  return dow === meioSemana || dow === fimSemana;
-}
-
 // Reuniões do quadro do mês. A varredura passa uma semana antes e uma depois
-// do mês porque a reunião conta pelo mês em que a semana começou (ver
-// public/mes-quadro.js) — por isso uma quinta 01/10 cai no quadro de setembro.
+// do mês porque o meio de semana conta pelo mês em que a semana começou (ver
+// public/mes-quadro.js) — por isso a quinta 01/10 cai no quadro de setembro,
+// enquanto o domingo 04/10 fica em outubro.
 function getMeetingDates(year, month) {
   const key = mesQuadro.monthKeyOf(year, month);
   const dates = [];
   const end = new Date(year, month, 7);
   for (let d = new Date(year, month - 1, -6); d <= end; d.setDate(d.getDate() + 1)) {
-    if (!isMeetingDay(d)) continue;
     const iso = toISO(d);
+    if (!mesQuadro.isMeetingDate(iso)) continue;
     if (mesQuadro.boardMonthKey(iso) === key) dates.push(iso);
   }
   return dates;
@@ -307,7 +284,6 @@ function getAvailableLeitura(lPool, date, allLeitura, rfsData, allAssignments) {
 module.exports = {
   getPeople,
   reloadPeople,
-  getMeetingDays,
   getMeetingDates,
   generateDay,
   computeCleaningPairs,
