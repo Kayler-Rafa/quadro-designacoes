@@ -8,7 +8,7 @@
 const https = require('https');
 const http  = require('http');
 
-const SHEET_ID   = '1WiWFHSvIcgPBidtN_oVgTzX578BgxVP9';
+const SHEET_ID   = '1D2eyqX3vqhU0FZBUAiQUNnoP9hNCujI-a8xN0fspHSI'; // Planilha Google "RVM" (antes era o RVM.xlsx)
 const CACHE_TTL  = 5 * 60 * 1000; // 5 minutos
 
 function fetchURL(url, depth = 0) {
