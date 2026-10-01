@@ -98,6 +98,30 @@ app.post('/api/assignments/generate/:year/:month', async (req, res) => {
   }
 });
 
+// POST resorteia só os grupos de limpeza do mês, sem mexer nas designações
+app.post('/api/limpeza/resortear/:year/:month', async (req, res) => {
+  try {
+    const year  = parseInt(req.params.year);
+    const month = parseInt(req.params.month);
+    const [people, assignments] = await Promise.all([
+      gen.getPeople(),
+      db.getMonthAssignments(year, month),
+    ]);
+    if (!assignments.length) {
+      return res.status(400).json({ error: 'Nenhuma designação gerada para este mês.' });
+    }
+
+    const seq = gen.resortearLimpeza(people.G, assignments.length, assignments.map(a => a.limpeza));
+    const limpezaByDate = {};
+    assignments.forEach((a, i) => { limpezaByDate[a.date] = seq[i]; });
+    await db.updateLimpeza(limpezaByDate);
+
+    res.json(await db.getMonthAssignments(year, month));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // PUT update a specific assignment field
 app.put('/api/assignments/:id', async (req, res) => {
   try {

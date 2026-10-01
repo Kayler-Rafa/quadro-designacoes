@@ -66,6 +66,18 @@ function getLimpezaForDate(pairs, dateIndex) {
   return pairs[pairIndex];
 }
 
+// Novo sorteio da limpeza para `count` reuniões. Tenta algumas vezes obter uma
+// sequência diferente da atual, para o botão de resortear sempre mudar algo.
+function resortearLimpeza(groups, count, atual = []) {
+  let seq = [];
+  for (let tentativa = 0; tentativa < 20; tentativa++) {
+    const pairs = computeCleaningPairs(groups);
+    seq = Array.from({ length: count }, (_, i) => getLimpezaForDate(pairs, i));
+    if (seq.some((l, i) => l !== atual[i])) break;
+  }
+  return seq;
+}
+
 function getLastAssignmentIdx(person, role, history) {
   for (let i = history.length - 1; i >= 0; i--) {
     const m = history[i];
@@ -288,6 +300,7 @@ module.exports = {
   generateDay,
   computeCleaningPairs,
   getLimpezaForDate,
+  resortearLimpeza,
   getAvailablePeople,
   cleanName,
   generateLeituraMonth,

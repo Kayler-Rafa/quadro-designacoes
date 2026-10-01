@@ -57,6 +57,36 @@ async function generateMonth(force = false) {
   }
 }
 
+async function resortearLimpeza() {
+  const ok = confirm(
+    `Sortear de novo os grupos de limpeza de ${MONTH_NAMES[currentMonth-1]} ${currentYear}?
+
+` +
+    `As designações mecânicas não mudam.`
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById('resortearLimpezaBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sorteando…';
+
+  try {
+    const res = await fetch(
+      `/api/limpeza/resortear/${currentYear}/${currentMonth}`,
+      { method: 'POST' }
+    );
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    assignments = body;
+    render();
+  } catch (e) {
+    alert('Erro ao resortear: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Resortear Grupos';
+  }
+}
+
 async function updateAssignment(id, field, value) {
   await fetch(`/api/assignments/${id}`, {
     method: 'PUT',
@@ -184,6 +214,8 @@ function closeModal() {
 // ── Render ───────────────────────────────────────────────────────────────────
 
 function updateGenerateBtn() {
+  document.getElementById('resortearLimpezaBtn').hidden = assignments.length === 0;
+
   const btn = document.getElementById('generateBtn');
   if (assignments.length > 0) {
     btn.textContent = 'Regenerar Mês';
@@ -287,6 +319,7 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   fetchAssignments();
 });
 
+document.getElementById('resortearLimpezaBtn').addEventListener('click', resortearLimpeza);
 document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('modalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modalOverlay')) closeModal();

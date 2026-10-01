@@ -102,6 +102,15 @@ async function regenerateMonthAssignments(year, month, newAssignments) {
   return data.assignments.filter(a => mesQuadro.isInBoardMonth(a.date, year, month));
 }
 
+// Grava a limpeza de várias datas numa única leitura+gravação.
+async function updateLimpeza(limpezaByDate) {
+  const data = await load();
+  for (const a of data.assignments) {
+    if (a.date in limpezaByDate) a.limpeza = limpezaByDate[a.date];
+  }
+  await persist(data);
+}
+
 async function getAllAssignments() {
   const data = await load();
   return [...data.assignments].sort((a, b) => a.date.localeCompare(b.date));
@@ -175,6 +184,7 @@ module.exports = {
   updateAssignment,
   deleteMonthAssignments,
   regenerateMonthAssignments,
+  updateLimpeza,
   getAllAssignments,
   getLeituraMonth,
   getAllLeitura,
