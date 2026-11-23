@@ -31,7 +31,7 @@ async function emManutencao() {
 
 app.use(async (req, res, next) => {
   if (!(await emManutencao())) return next();
-  if (req.path === '/favicon.png') return res.sendFile(path.join(__dirname, 'public', 'favicon.png'));
+  if (req.path === '/favicon.png' || req.path === '/apple-touch-icon.png') return res.sendFile(path.join(__dirname, 'public', req.path));
   res.set('Retry-After', '3600');
   res.set('Cache-Control', 'no-store');
   if (req.path.startsWith('/api/')) return res.status(503).json({ error: 'Sistema em manutenção' });
