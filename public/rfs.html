@@ -409,7 +409,7 @@
     if (!monthKeys.length) return;
     const btn = document.getElementById('leituraGenBtn');
     const isRegen = leituraData.length > 0;
-    if (isRegen && !confirm('Regenerar a leitura deste mês? Os nomes serão sorteados novamente.')) return;
+    if (!confirm(isRegen ? 'Regenerar a leitura deste mês? Os nomes serão sorteados novamente.' : 'Gerar a leitura deste mês?')) return;
     btn.disabled = true; btn.textContent = 'Gerando…';
     try {
       const { year, month } = keyToYM(monthKeys[curIdx]);

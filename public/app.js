@@ -32,13 +32,11 @@ async function fetchAssignments() {
 }
 
 async function generateMonth(force = false) {
-  if (force && assignments.length > 0) {
-    const ok = confirm(
-      `Isso vai apagar e regenerar todas as designações de ${MONTH_NAMES[currentMonth-1]} ${currentYear}.\n\n` +
-      `O dia 01/jun será mantido com os dados originais.\n\nContinuar?`
-    );
-    if (!ok) return;
-  }
+  const mes = `${MONTH_NAMES[currentMonth-1]} ${currentYear}`;
+  const ok = confirm(force && assignments.length > 0
+    ? `Isso vai apagar e regenerar todas as designações de ${mes}.\n\nContinuar?`
+    : `Gerar as designações de ${mes}?`);
+  if (!ok) return;
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
