@@ -8,6 +8,20 @@ const rfs    = require('./rfs-parser');
 const grupos = require('./grupos-parser');
 
 const app = express();
+
+// Modo manutenção: true deixa o sistema fora do ar (MANUTENCAO=off no ambiente reativa)
+const EM_MANUTENCAO = process.env.MANUTENCAO ? process.env.MANUTENCAO !== 'off' : true;
+const STATUS_DIR = path.join(__dirname, 'status');
+
+if (EM_MANUTENCAO) {
+  app.use((req, res) => {
+    if (req.path === '/favicon.png') return res.sendFile(path.join(__dirname, 'public', 'favicon.png'));
+    res.set('Retry-After', '3600');
+    if (req.path.startsWith('/api/')) return res.status(503).json({ error: 'Sistema em manutenção' });
+    res.status(503).sendFile(path.join(STATUS_DIR, 'manutencao.html'));
+  });
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/mapa', express.static(path.join(__dirname, 'mapa')));
@@ -325,6 +339,12 @@ app.get('/api/people', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+// 404 para qualquer rota não encontrada
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Não encontrado' });
+  res.status(404).sendFile(path.join(STATUS_DIR, '404.html'));
 });
 
 // Export for Vercel serverless; also listen when run directly
