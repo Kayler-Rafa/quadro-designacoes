@@ -9,18 +9,34 @@ const grupos = require('./grupos-parser');
 
 const app = express();
 
-// Modo manutenção: true deixa o sistema fora do ar (MANUTENCAO=off no ambiente reativa)
-const EM_MANUTENCAO = process.env.MANUTENCAO ? process.env.MANUTENCAO !== 'off' : true;
+// Modo manutenção controlado pelo painel central (mapa-system.vercel.app/painel.html):
+// lê controle/quadro/off no Firebase, com cache de 10s. Se o Firebase não
+// responder, vale a variável MANUTENCAO (padrão: fora do ar; MANUTENCAO=off reativa).
+const MANUTENCAO_PADRAO = process.env.MANUTENCAO ? process.env.MANUTENCAO !== 'off' : true;
+const FLAG_URL = 'https://mapa-a4630-default-rtdb.firebaseio.com/controle/quadro/off.json';
 const STATUS_DIR = path.join(__dirname, 'status');
+let flagCache = { valor: null, em: 0 };
 
-if (EM_MANUTENCAO) {
-  app.use((req, res) => {
-    if (req.path === '/favicon.png') return res.sendFile(path.join(__dirname, 'public', 'favicon.png'));
-    res.set('Retry-After', '3600');
-    if (req.path.startsWith('/api/')) return res.status(503).json({ error: 'Sistema em manutenção' });
-    res.status(503).sendFile(path.join(STATUS_DIR, 'manutencao.html'));
-  });
+async function emManutencao() {
+  if (flagCache.valor !== null && Date.now() - flagCache.em < 10000) return flagCache.valor;
+  try {
+    const r = await fetch(FLAG_URL, { signal: AbortSignal.timeout(2500) });
+    if (r.ok) {
+      const v = await r.json();
+      if (typeof v === 'boolean') { flagCache = { valor: v, em: Date.now() }; return v; }
+    }
+  } catch (_) { /* Firebase fora: usa o padrão */ }
+  return MANUTENCAO_PADRAO;
 }
+
+app.use(async (req, res, next) => {
+  if (!(await emManutencao())) return next();
+  if (req.path === '/favicon.png') return res.sendFile(path.join(__dirname, 'public', 'favicon.png'));
+  res.set('Retry-After', '3600');
+  res.set('Cache-Control', 'no-store');
+  if (req.path.startsWith('/api/')) return res.status(503).json({ error: 'Sistema em manutenção' });
+  res.status(503).sendFile(path.join(STATUS_DIR, 'manutencao.html'));
+});
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
